@@ -5,8 +5,8 @@ class ElevenLabsClient {
     }
     static characterToVoiceIdMapping = {
         "shyguy": "bGNROVfU5WbK6F0AyHII",
-        "sister": "rCmVtv8cYU60uhlsOo1M",
-        "hanna": "tVAXY8ApYcHIFjTH8kL0",
+        "sister": "VfTRhexMRVuPmOe9aogj",
+        "jessica": "zQPM9vJjjzGxbs457rQj",
         "barman": "XA2bIQ92TabjGbpO2xRr",
         "dj": "T0pkYhIZ7UMOc26gqqeX",
     }
