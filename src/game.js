@@ -9,8 +9,9 @@ export class Game {
     this.storyEngine = new StoryEngine();
   }
 
-  run() {
+  async run() {
     console.log("[Game]: run");
+    // await this.gameEngine.loadAssets();
     this.gameEngine.init();
     // this.gameEngine.run();
     // initialize and start other classes

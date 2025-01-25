@@ -3,8 +3,31 @@ const SHYGUY_SPEED = 0.5;
 
 const IS_DEBUG = true;
 
+// class CustomImage {
+//   constructor(imageSrc) {
+//     this.image = new Image();
+
+//     this.loadPromise = new Promise((resolve, reject) => {
+//       this.image.onload = () => {
+//         resolve(this);
+//       };
+//       this.image.onerror = () => {
+//         reject(new Error(`Failed to load image: ${imageSrc}`));
+//       };
+//     });
+
+//     this.image.src = imageSrc;
+//   }
+
+//   async waitForLoad() {
+//     return this.loadPromise;
+//   }
+// }
+
 class SpriteEntity {
   constructor(x0, y0, imageSrc, speed = 0, width = 32, height = 32, frameRate = 8, frameCount = 4) {
+    // super(imageSrc);
+
     this.x = x0;
     this.y = y0;
     this.width = width;
@@ -83,6 +106,11 @@ export class GameEngine {
     this.dialogueView = document.getElementById("dialogueView");
     this.currentView = "game";
 
+    this.gameChatContainer = document.getElementById("chatMessages");
+    this.messageInput = document.getElementById("messageInput");
+    this.sendButton = document.getElementById("sendButton");
+    this.handleSendMessage = this.handleSendMessage.bind(this);
+
     this.gameFrame = 0;
     this.keys = {
       ArrowUp: false,
@@ -118,8 +146,8 @@ export class GameEngine {
     };
 
     // load assets for drawing the scene
-    this.wall = new SpriteImage("/assets/wall-tile.png");
-    this.floor = new SpriteImage("/assets/floor-tile.png");
+    this.wall = new SpriteImage("/assets/assets/wall-tile.png");
+    this.floor = new SpriteImage("/assets/assets/floor-tile.png");
 
     this.gridCols = Math.ceil(this.canvasWidth / this.wall.width);
     this.gridRows = Math.ceil(this.canvasHeight / this.wall.height);
@@ -131,11 +159,11 @@ export class GameEngine {
     // initialize players
     const cx = this.canvasWidth / 2;
     const cy = this.canvasHeight / 2;
-    this.shyguySprite = new GuidedSpriteEntity(cx, cy, "/assets/shyguy.png", SHYGUY_SPEED);
+    this.shyguySprite = new GuidedSpriteEntity(cx, cy, "/assets/assets/shyguy.png", SHYGUY_SPEED);
     this.wingmanSprite = new SpriteEntity(
       this.wall.width,
       this.canvasHeight - 2 * this.wall.width,
-      "/assets/player.png",
+      "/assets/assets/player.png",
       WINGMAN_SPEED
     );
 
@@ -180,7 +208,22 @@ export class GameEngine {
     };
   }
 
-  init() {
+  // async loadAssets() {
+  //   try {
+  //     await Promise.all([
+  //       this.wall.waitForLoad(),
+  //       this.floor.waitForLoad(),
+  //       this.shyguySprite.waitForLoad(),
+  //       this.wingmanSprite.waitForLoad(),
+  //     ]);
+  //   } catch (error) {
+  //     console.error("Failed to load assets:", error);
+  //   }
+  // }
+
+  init(shyguy) {
+    this.shyguy = shyguy;
+
     this.canvas.width = this.canvasWidth;
     this.canvas.height = this.canvasHeight;
 
@@ -189,6 +232,10 @@ export class GameEngine {
 
     // Initialize with game view
     this.switchView("game");
+
+    this.addChatMessage(this.gameChatContainer, "Welcome to Shyguy's Wingman!", true);
+    this.sendButton.addEventListener("click", this.handleSendMessage);
+
     this.run();
   }
 
@@ -616,6 +663,40 @@ export class GameEngine {
     if (statusText) {
       statusText.textContent = message;
     }
+  }
+
+  clearChat(container) {
+    if (container) {
+      container.innerHTML = "";
+    }
+  }
+
+  initMessageHandlers() {
+    // Add click handler for send button
+  }
+
+  addChatMessage(container, message, isShyguy = false) {
+    if (!container) return;
+
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `chat-message ${isShyguy ? "shyguy" : "wingman"}`;
+
+    const bubble = document.createElement("div");
+    bubble.className = "message-bubble";
+    bubble.textContent = message;
+
+    messageDiv.appendChild(bubble);
+    container.appendChild(messageDiv);
+
+    // Auto scroll to bottom
+    container.scrollTop = container.scrollHeight;
+  }
+
+  async handleSendMessage() {
+    const message = this.messageInput.value.trim();
+    // output the message to the text and send a message to the llm
+    this.addChatMessage(this.gameChatContainer, message, false);
+    this.messageInput.value = "";
   }
 
   async run() {
