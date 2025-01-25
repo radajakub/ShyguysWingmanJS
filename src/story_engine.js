@@ -1,5 +1,4 @@
-import Shyguy from './shyguy';
-import Sister from './sister';
+
 import ConversationLLM from './conversation_llm';
 
 class Bar {
