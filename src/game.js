@@ -12,6 +12,7 @@ export class Game {
   run() {
     console.log("[Game]: run");
     this.gameEngine.init();
+    // this.gameEngine.run();
     // initialize and start other classes
   }
 }
