@@ -92,7 +92,12 @@ class Target {
 }
 
 export class GameEngine {
-  constructor() {
+  constructor(shyguy, shyguyLLM, storyEngine, speechToTextClient) {
+    this.shyguy = shyguy;
+    this.shyguyLLM = shyguyLLM;
+    this.storyEngine = storyEngine;
+    this.speechToTextClient = speechToTextClient;
+
     this.canvasWidth = 960;
     this.canvasHeight = 640;
     this.canvas = document.getElementById("gameCanvas");
@@ -106,10 +111,15 @@ export class GameEngine {
     this.dialogueView = document.getElementById("dialogueView");
     this.currentView = "game";
 
+    this.shouldContinue = true;
+
     this.gameChatContainer = document.getElementById("chatMessages");
     this.messageInput = document.getElementById("messageInput");
     this.sendButton = document.getElementById("sendButton");
+    this.microphoneButton = document.getElementById("micButton");
+
     this.handleSendMessage = this.handleSendMessage.bind(this);
+    this.handleMicrophone = this.handleMicrophone.bind(this);
 
     this.gameFrame = 0;
     this.keys = {
@@ -133,6 +143,8 @@ export class GameEngine {
     this.handleSpriteCollision = this.handleSpriteCollision.bind(this);
     this.initDebugControls = this.initDebugControls.bind(this);
     this.stopShyguyAnimation = this.stopShyguyAnimation.bind(this);
+    this.handlePlayAgain = this.handlePlayAgain.bind(this);
+    this.handleMicrophone = this.handleMicrophone.bind(this);
 
     this.pushEnabled = false;
 
@@ -206,6 +218,19 @@ export class GameEngine {
         true
       ),
     };
+
+    // Add game over view
+    this.gameOverView = document.getElementById("gameOverView");
+    this.playAgainBtn = document.getElementById("playAgainBtn");
+
+    // Bind new method
+
+    // Initialize play again button
+    this.playAgainBtn.addEventListener("click", this.handlePlayAgain);
+
+    this.microphoneButton.addEventListener("click", this.handleMicrophone);
+
+    this.isRecording = false;
   }
 
   // async loadAssets() {
@@ -221,9 +246,7 @@ export class GameEngine {
   //   }
   // }
 
-  init(shyguy) {
-    this.shyguy = shyguy;
-
+  init() {
     this.canvas.width = this.canvasWidth;
     this.canvas.height = this.canvasHeight;
 
@@ -233,10 +256,16 @@ export class GameEngine {
     // Initialize with game view
     this.switchView("game");
 
-    this.addChatMessage(this.gameChatContainer, "Welcome to Shyguy's Wingman!", true);
     this.sendButton.addEventListener("click", this.handleSendMessage);
+    // TODO: bind microphone to the input api
 
     this.run();
+    this.shyguySprite.setTarget(this.targets.exit);
+  }
+
+  endGame() {
+    this.shouldContinue = false;
+    this.switchView("gameOver");
   }
 
   initBackgroundGridMap() {
@@ -531,6 +560,12 @@ export class GameEngine {
       if (isClose) {
         target.enabled = false;
         this.stopShyguyAnimation(target);
+        if (target.label === "exit") {
+          this.endGame();
+          // END THE GAME
+        } else {
+          this.storyEngine.onEncounter(target.label);
+        }
         break;
       }
     }
@@ -601,12 +636,22 @@ export class GameEngine {
 
     this.currentView = viewName;
 
-    if (viewName === "game") {
-      this.gameView.classList.add("active");
-      this.dialogueView.classList.remove("active");
-    } else if (viewName === "dialogue") {
-      this.gameView.classList.remove("active");
-      this.dialogueView.classList.add("active");
+    // Hide all views first
+    this.gameView.classList.remove("active");
+    this.dialogueView.classList.remove("active");
+    this.gameOverView.classList.remove("active");
+
+    // Show the requested view
+    switch (viewName) {
+      case "game":
+        this.gameView.classList.add("active");
+        break;
+      case "dialogue":
+        this.dialogueView.classList.add("active");
+        break;
+      case "gameOver":
+        this.gameOverView.classList.add("active");
+        break;
     }
   }
 
@@ -692,11 +737,47 @@ export class GameEngine {
     container.scrollTop = container.scrollHeight;
   }
 
-  async handleSendMessage() {
-    const message = this.messageInput.value.trim();
-    // output the message to the text and send a message to the llm
+  async sendMessageToShyguy(message) {
     this.addChatMessage(this.gameChatContainer, message, false);
     this.messageInput.value = "";
+
+    this.shyguyLLM.getShyGuyResponse(message).then((response) => {
+      const dialogue = response.dialogue;
+      const action = response.action;
+
+      // TODO: add the messages to the context of the prompts
+
+      // Add message to the chat view
+      this.addChatMessage(this.gameChatContainer, dialogue, true);
+
+      console.log("[ShyguyLLM]: Next action: ", action);
+
+      // TODO: resolve the action
+      switch (action) {
+        case "go_bar":
+          this.setNewTarget(this.targets.bar);
+          break;
+        case "go_dj":
+          this.setNewTarget(this.targets.dj);
+          break;
+        case "go_sister":
+          this.setNewTarget(this.targets.sister);
+          break;
+        case "go_girl":
+          this.setNewTarget(this.targets.girl);
+          break;
+        case "go_home":
+          this.setNewTarget(this.targets.exit);
+          break;
+        default:
+          break;
+      }
+    });
+  }
+
+  async handleSendMessage() {
+    const message = this.messageInput.value.trim();
+    this.sendMessageToShyguy(message);
   }
 
   async run() {
@@ -704,6 +785,53 @@ export class GameEngine {
     await new Promise((resolve) => setTimeout(resolve, 16));
     this.update();
     this.draw();
-    requestAnimationFrame(this.run);
+    if (this.shouldContinue) {
+      requestAnimationFrame(this.run);
+    }
+  }
+
+  handlePlayAgain() {
+    // Reset game state
+    this.init();
+    // Switch back to game view
+    this.switchView("game");
+  }
+
+  resetGame() {
+    // Reset player positions
+    const cx = this.canvasWidth / 2;
+    const cy = this.canvasHeight / 2;
+    this.shyguySprite.x = cx;
+    this.shyguySprite.y = cy;
+    this.wingmanSprite.x = this.wall.width;
+    this.wingmanSprite.y = this.canvasHeight - 2 * this.wall.width;
+
+    // Reset targets
+    Object.values(this.targets).forEach((target) => {
+      target.enabled = true;
+    });
+
+    // Reset other game state
+    this.shouldContinue = true;
+    this.shyguySprite.setTarget(this.targets.exit);
+  }
+
+  async handleMicrophone() {
+    if (!this.isRecording) {
+      // Start recording
+      this.isRecording = true;
+      this.microphoneButton.classList.add("recording");
+      this.microphoneButton.innerHTML = '<i class="fas fa-stop"></i>';
+
+      await this.speechToTextClient.startRecording();
+    } else {
+      // Stop recording
+      this.isRecording = false;
+      this.microphoneButton.classList.remove("recording");
+      this.microphoneButton.innerHTML = '<i class="fas fa-microphone"></i>';
+
+      const result = await this.speechToTextClient.stopRecording();
+      this.sendMessageToShyguy(result.text);
+    }
   }
 }
