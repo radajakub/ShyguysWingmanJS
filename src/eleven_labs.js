@@ -28,7 +28,7 @@ class ElevenLabsClient {
     async createSpeech({
         text,
         voiceId,
-        modelId = 'eleven_monolingual_v1',
+        modelId = 'eleven_multilingual_v2',
         outputFormat = 'mp3_44100_128',
         voiceSettings = null,
         pronunciationDictionaryLocators = null,
