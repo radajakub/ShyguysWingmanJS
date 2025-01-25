@@ -30,7 +30,7 @@ class DJ {
     constructor() {
         this.name = "DJ";
         this.situation_prompt = "This is a conversation with the DJ.";
-        this.personality = "This is the DJ. He is very nice and helpful.";
+        this.personality = "This is the DJ. He is very nice and helpful. He can only play songs from the options [Let it be, Call me maybe, Shape of you]. If asked to play a song, he will play it and not propose any other song.";
         // this.past_conversation = "";
         this.imgpath = "assets/dj.png";
         this.output_format_prompt = "";
@@ -57,13 +57,13 @@ class Sister {
       // Initialize Sister properties
       this.name = "sister";
       this.mood = 1;
-      this.situation_prompt = "This is a conversation with the sister.";
-      this.personality = "This is the sister. She is a deeply religious Christian. She is helpful in her second answer, her first answer is rude. If asked about the favourite song of the girl, she says it is 'Shape of you'.";
+      this.situation_prompt = "This is a conversation with the sister of Jessica.";
+      this.personality = "This is the sister of Jessica. She is a deeply religious Christian. She is helpful in her second answer, her first answer is rude. If asked about the favourite song of the girl, she says it is 'Call me maybe'.";
       // this.past_conversation = "";
       this.imgpath = "assets/sister.png";
       this.functionDescriptions = [{
           key: "analyzeMood",
-          description: "Analyze the conversation to determine the mood of the sister on the scale 1 to 10. Also determine if the game is over.",
+          description: "Mood of the sister and gameover",
           parameters: {
               mood: {
                   type: "number",
@@ -75,11 +75,42 @@ class Sister {
               }
           }
       }];
-      this.functionPrompt = "";
+      this.functionPrompt = "Analyze the conversation to determine the mood of the sister on the scale 1 to 10, based of how nice the conversation was. Also determine if the game is over. The game is over if shyguy was mean to the sister.";
   }
 
   getSystemPrompt() {
     return `${this.personality}. Her mood is ${this.mood} on the level 1 to 10. If the mood is low, she will be rude. If the mood is high, she will be helpful.`;
+  }
+}
+
+class Girl {
+  constructor(shyguy) {
+    this.name = "Jessica";
+    this.situation_prompt = "This is a conversation with the Jessica. She is the girl that shyguy likes.";
+    this.personality = "This is Jessica. She is shy but nice. She likes the song 'Call me maybe'.";
+    this.imgpath = "assets/girl.png";
+    this.output_format_prompt = "";
+    this.shyguy = shyguy;
+    this.functionDescriptions = [{
+      key: "analyzeLiking",
+      description: "Analyze if the conversation is nice or not",
+      parameters: {
+        likes_shyguy: {
+          type: "boolean",
+          description: "If the conversation is nice, True",
+        },
+      }
+    }];
+    this.functionPrompt = "Analyze if the conversation is nice or not.";
+  }
+
+  getSystemPrompt() {
+    if (this.shyguy.song_playing === "Call me maybe") {
+      return `${this.personality}. She is very happy with the song playing. The first thing she says is that she really likes the music. Therefore she is nice and she likes shyguy. However, if he talks about algorithms, she does not like it and she becomes mean.`;
+    }
+    else {
+      return `${this.personality}. She does not like the song that shyguy is playing. The first thing she says is that the song is terrible. Then she is mean all the time.`;
+    }
   }
 }
 
@@ -90,22 +121,19 @@ export class StoryEngine {
     this.sister = new Sister();
     this.bar = new Bar();
     this.dj = new DJ();
+    this.girl = new Girl(shyguy);
   }
 
-  onEncounter(entity) {
+  async onEncounter(entity) {
     switch (entity) {
       case "sister":
-        this.generalInteraction(this.sister);
-        break;
+        return this.generalInteraction(this.sister);
       case "bar":
-        this.generalInteraction(this.bar);
-        break;
+        return this.generalInteraction(this.bar);
       case "girl":
-        this.generalInteraction(this.girl);
-        break;
-      case "dj":
-        this.generalInteraction(this.dj);
-        break;
+        return await this.generalInteraction(this.girl);
+      case "DJ":
+        return await this.generalInteraction(this.dj);
       default:
         console.log("Unknown entity encountered");
     }
@@ -113,8 +141,6 @@ export class StoryEngine {
 
   async generalInteraction(targetEntity){
     await this.shyguy.learnLesson(targetEntity.name);
-    console.log(this.shyguy.getSystemPrompt());
-    console.log(this.shyguy.lessons_learned);
     const conversation_llm = new ConversationLLM("Shyguy", 
           targetEntity.name, 
           this.shyguy.getSystemPrompt(), 
@@ -123,57 +149,61 @@ export class StoryEngine {
           targetEntity.output_format_prompt,
           targetEntity.functionDescriptions,
           targetEntity.functionPrompt);
-    const conversation_json = await conversation_llm.generateConversation(6);
-    const conversation = conversation_json.conversation;
-    const gameOver = conversation_json.game_over;
-    targetEntity.past_conversation += conversation;
-    console.log(conversation_json);
-
-    return {conversation: conversation, char1imgpath: this.shyguy.imgpath, char2imgpath: targetEntity.imgpath, gameOver: gameOver};
+    const conversation_output = await conversation_llm.generateConversation(6);
+    const conversation = conversation_output.conversation;
+    
+    let gameOver = this.decideGameOver(conversation_output.analysis.parameters.game_over);
+    let gameSuccesful = this.decideGameSuccesful(conversation_output.analysis.parameters.likes_shyguy);
+    if (targetEntity.name === "Jessica" && (!gameSuccesful)) {
+      gameOver = true;
+    }
+    console.log("gameOver: " + gameOver);
+    console.log("gameSuccesful: " + gameSuccesful);
+    console.log(conversation_output);
+    
+    this.updateStates(conversation_output.analysis, targetEntity.name);
+    return {conversation: conversation, char1imgpath: this.shyguy.imgpath, char2imgpath: targetEntity.imgpath, gameOver: gameOver, gameSuccesful: gameSuccesful};
   }
 
-//   sisterInteraction() {
-//     const shyguyPersonalityPrompt = this.getShyguyPersonalityPrompt();
-//     const sisterPrompt = this.sister.getSystemPrompt();
-//     const conversation_llm = new ConversationLLM("Shyguy", "Sister", shyguyPersonalityPrompt, sisterPrompt, this.sister.output_format_prompt);
-//     const conversation_json = conversation_llm.generateConversation(3);
-//     const conversation = conversation_json.conversation;
-//     const gameOver = conversation_json.game_over;
-//     this.sister.past_conversation += conversation;
-//     return {conversation: conversation, char1imgpath: this.shyguy.imgpath, char2imgpath: this.sister.imgpath, gameOver: gameOver};
-//   }
+  decideGameOver(gameOverParameter){
+    let gameOver = false;
+    if (gameOverParameter === "none") {
+      gameOver = false;
+    } else if (gameOverParameter === true) {
+      gameOver = true;
+    } else {
+      gameOver = false;
+    }
+    return gameOver;
+  }
 
-//   barInteraction() {
-//     const shyguyPersonalityPrompt = this.shyguy.getSystemPrompt();
-//     const barPrompt = this.bar.getSystemPrompt();
-//     const conversation_llm = new ConversationLLM("Shyguy", "Bar", shyguyPersonalityPrompt, barPrompt, this.bar.output_format_prompt);
-//     const conversation_json = conversation_llm.generateConversation(3);
-//     const conversation = conversation_json.conversation;
-//     const gameOver = conversation_json.game_over;
-//     this.bar.past_conversation += conversation;
-//     console.log(conversation_json);
-//     return {conversation: conversation, char1imgpath: this.shyguy.imgpath, char2imgpath: this.bar.imgpath, gameOver: gameOver};
-//   }
+  decideGameSuccesful(likesShyguy){
+    let gameSuccesful = false;
+    if (likesShyguy) {
+      gameSuccesful = true;
+    }
+    else {
+      gameSuccesful = false;
+    }
+    return gameSuccesful;
+  }
 
-//   girlInteraction() {
-//     const shyguyPersonalityPrompt = this.getShyguyPersonalityPrompt();
-//     const girlPersonalityPrompt = `${this.girl.personality}.`;
-//     const conversation_llm = new ConversationLLM("Shyguy", "Girl", shyguyPersonalityPrompt, girlPersonalityPrompt, this.girl.output_format_prompt);
-//     const conversation_json = conversation_llm.generateConversation(3);
-//     const conversation = conversation_json.conversation;
-//     const gameOver = conversation_json.game_over;
-//     this.girl.past_conversation += conversation;
-//     return {conversation: conversation, char1imgpath: this.shyguy.imgpath, char2imgpath: this.girl.imgpath, gameOver: gameOver};
-//   }
-
-//   djInteraction() {
-//     const shyguyPersonalityPrompt = this.getShyguyPersonalityPrompt();
-//     const djPersonalityPrompt = `${this.dj.personality}.`;
-//     const conversation_llm = new ConversationLLM("Shyguy", "DJ", shyguyPersonalityPrompt, djPersonalityPrompt, this.dj.output_format_prompt);
-//     const conversation_json = conversation_llm.generateConversation(3);
-//     const conversation = conversation_json.conversation;
-//     const new_song = conversation_json.new_song;
-//     this.dj.past_conversation += conversation;
-//     return {conversation: conversation, char1imgpath: this.shyguy.imgpath, char2imgpath: this.dj.imgpath, new_song: new_song};
-//   }
+  updateStates(conversation_analysis, targetName){
+    if (targetName === "sister"){
+      if (conversation_analysis.parameters.mood !== "none") {
+        this.sister.mood = conversation_analysis.parameters.mood;
+      }
+    }
+    else if (targetName === "bartender"){
+      if (conversation_analysis.parameters.num_beers !== "none") {
+        this.shyguy.num_beers += Number(conversation_analysis.parameters.num_beers);
+        console.log("Shyguy num_beers inside updateStates: " + this.shyguy.num_beers);
+      }
+    }
+    else if (targetName === "DJ"){
+      if (conversation_analysis.parameters.song !== "none") {
+        this.shyguy.song_playing = conversation_analysis.parameters.song;
+      }
+    }
+  }
 }
