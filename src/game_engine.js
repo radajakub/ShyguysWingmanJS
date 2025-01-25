@@ -92,10 +92,11 @@ class Target {
 }
 
 export class GameEngine {
-  constructor(shyguy, shyguyLLM, storyEngine) {
+  constructor(shyguy, shyguyLLM, storyEngine, speechToTextClient) {
     this.shyguy = shyguy;
     this.shyguyLLM = shyguyLLM;
     this.storyEngine = storyEngine;
+    this.speechToTextClient = speechToTextClient;
 
     this.canvasWidth = 960;
     this.canvasHeight = 640;
@@ -115,7 +116,10 @@ export class GameEngine {
     this.gameChatContainer = document.getElementById("chatMessages");
     this.messageInput = document.getElementById("messageInput");
     this.sendButton = document.getElementById("sendButton");
+    this.microphoneButton = document.getElementById("micButton");
+
     this.handleSendMessage = this.handleSendMessage.bind(this);
+    this.handleMicrophone = this.handleMicrophone.bind(this);
 
     this.gameFrame = 0;
     this.keys = {
@@ -139,6 +143,8 @@ export class GameEngine {
     this.handleSpriteCollision = this.handleSpriteCollision.bind(this);
     this.initDebugControls = this.initDebugControls.bind(this);
     this.stopShyguyAnimation = this.stopShyguyAnimation.bind(this);
+    this.handlePlayAgain = this.handlePlayAgain.bind(this);
+    this.handleMicrophone = this.handleMicrophone.bind(this);
 
     this.pushEnabled = false;
 
@@ -218,10 +224,13 @@ export class GameEngine {
     this.playAgainBtn = document.getElementById("playAgainBtn");
 
     // Bind new method
-    this.handlePlayAgain = this.handlePlayAgain.bind(this);
 
     // Initialize play again button
     this.playAgainBtn.addEventListener("click", this.handlePlayAgain);
+
+    this.microphoneButton.addEventListener("click", this.handleMicrophone);
+
+    this.isRecording = false;
   }
 
   // async loadAssets() {
@@ -728,8 +737,7 @@ export class GameEngine {
     container.scrollTop = container.scrollHeight;
   }
 
-  async handleSendMessage() {
-    const message = this.messageInput.value.trim();
+  async sendMessageToShyguy(message) {
     this.addChatMessage(this.gameChatContainer, message, false);
     this.messageInput.value = "";
 
@@ -767,6 +775,11 @@ export class GameEngine {
     });
   }
 
+  async handleSendMessage() {
+    const message = this.messageInput.value.trim();
+    this.sendMessageToShyguy(message);
+  }
+
   async run() {
     // wait for 16ms
     await new Promise((resolve) => setTimeout(resolve, 16));
@@ -801,5 +814,24 @@ export class GameEngine {
     // Reset other game state
     this.shouldContinue = true;
     this.shyguySprite.setTarget(this.targets.exit);
+  }
+
+  async handleMicrophone() {
+    if (!this.isRecording) {
+      // Start recording
+      this.isRecording = true;
+      this.microphoneButton.classList.add("recording");
+      this.microphoneButton.innerHTML = '<i class="fas fa-stop"></i>';
+
+      await this.speechToTextClient.startRecording();
+    } else {
+      // Stop recording
+      this.isRecording = false;
+      this.microphoneButton.classList.remove("recording");
+      this.microphoneButton.innerHTML = '<i class="fas fa-microphone"></i>';
+
+      const result = await this.speechToTextClient.stopRecording();
+      this.sendMessageToShyguy(result.text);
+    }
   }
 }
