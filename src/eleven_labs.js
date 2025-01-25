@@ -1,0 +1,86 @@
+class ElevenLabsClient {
+    constructor() {
+        this.apiKey = "***REMOVED***";
+        this.baseUrl = 'https://api.elevenlabs.io/v1';
+    }
+    static characterToVoiceIdMapping = {
+        "shyguy": "bGNROVfU5WbK6F0AyHII",
+        "sister": "rCmVtv8cYU60uhlsOo1M",
+        
+        "hanna": "21m00Tcm4TlvDq8ikWAM",
+        "barman": "21m00Tcm4TlvDq8ikWAM",
+        "dj": "21m00Tcm4TlvDq8ikWAM",
+    }
+    async playAudioForCharacter(character, text) {
+        const voiceId = ElevenLabsClient.characterToVoiceIdMapping[character];
+        if (!voiceId) {
+            throw new Error(`No voice mapping found for character: ${character}`);
+        }
+        const audioBlob = await this.createSpeech({
+            text: text,
+            voiceId: voiceId
+        });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+    }
+
+    async createSpeech({
+        text,
+        voiceId,
+        modelId = 'eleven_monolingual_v1',
+        outputFormat = 'mp3_44100_128',
+        voiceSettings = null,
+        pronunciationDictionaryLocators = null,
+        seed = null,
+        previousText = null,
+        nextText = null,
+        previousRequestIds = null,
+        nextRequestIds = null,
+        usePvcAsIvc = false,
+        applyTextNormalization = 'auto'
+    }) {
+        const url = `${this.baseUrl}/text-to-speech/${voiceId}?output_format=${outputFormat}`;
+
+        const requestBody = {
+            text,
+            model_id: modelId,
+            voice_settings: voiceSettings,
+            pronunciation_dictionary_locators: pronunciationDictionaryLocators,
+            seed,
+            previous_text: previousText,
+            next_text: nextText,
+            previous_request_ids: previousRequestIds,
+            next_request_ids: nextRequestIds,
+            use_pvc_as_ivc: usePvcAsIvc,
+            apply_text_normalization: applyTextNormalization
+        };
+
+        // Remove null values from request body
+        Object.keys(requestBody).forEach(key => 
+            requestBody[key] === null && delete requestBody[key]
+        );
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'xi-api-key': this.apiKey,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`);
+            }
+
+            // Return audio blob
+            return await response.blob();
+        } catch (error) {
+            throw new Error(`Failed to create speech: ${error.message}`);
+        }
+    }
+}
+
+export default ElevenLabsClient;
