@@ -4,12 +4,57 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shyguy's Wingman</title>
-    <link rel="stylesheet" href="./styles/style.css" />
-    <!-- TODO: Add icon? -->
+    <link rel="stylesheet" href="/styles/style.css" />
+    <!-- Font Awesome for microphone icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   </head>
   <body>
-    <canvas id="gameCanvas"></canvas>
-    <!-- TODO: Add dialogue window and other stuff as well -->
+    <div class="status-bar">
+      <div class="status-text" id="statusText">Game status messages will appear here...</div>
+    </div>
+
+    <div class="game-view active" id="gameView">
+      <div class="container">
+        <div class="game-section">
+          <canvas id="gameCanvas"></canvas>
+        </div>
+        <div class="chat-section">
+          <div class="chat-messages" id="chatMessages">
+            <!-- Messages will be added here -->
+          </div>
+          <div class="input-area">
+            <textarea id="messageInput" placeholder="Type your message here..." rows="3"></textarea>
+            <div class="button-group">
+              <button id="sendButton" class="send-button">Send</button>
+              <button id="micButton" class="mic-button">
+                <i class="fas fa-microphone"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dialogue-view" id="dialogueView">
+      <div class="character-section">
+        <div class="character left-character">
+          <!-- Left character image placeholder -->
+        </div>
+        <div class="dialogue-box">
+          <div class="dialogue-messages" id="dialogueMessages">
+            <!-- Dialogue messages will be added here -->
+          </div>
+        </div>
+        <div class="character right-character">
+          <!-- Right character image placeholder -->
+        </div>
+      </div>
+    </div>
+
+    <div class="debug-controls">
+      <button id="switchToGameBtn" class="debug-button">Switch to Game View</button>
+      <button id="switchToDialogueBtn" class="debug-button">Switch to Dialogue View</button>
+    </div>
     <script src="./src/index.js" type="module"></script>
   </body>
 </html>
