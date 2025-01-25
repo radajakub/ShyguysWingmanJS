@@ -6,8 +6,8 @@ class ElevenLabsClient {
     static characterToVoiceIdMapping = {
         "shyguy": "bGNROVfU5WbK6F0AyHII",
         "sister": "rCmVtv8cYU60uhlsOo1M",
-        "hanna": "MNVQDcciBpGwnmmzr2b4",
-        "barman": "4zVVKJJRwoOAAeUwtCQ1",
+        "hanna": "tVAXY8ApYcHIFjTH8kL0",
+        "barman": "XA2bIQ92TabjGbpO2xRr",
         "dj": "T0pkYhIZ7UMOc26gqqeX",
     }
     async playAudioForCharacter(character, text) {
