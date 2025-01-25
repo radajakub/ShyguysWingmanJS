@@ -1,6 +1,8 @@
+const ELEVENLABS_API_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY;
+
 class ElevenLabsClient {
     constructor() {
-        this.apiKey = "sk_62d0fc2ccddb1a4036f624dd8c411383fd9b9990755ea086";
+        this.apiKey = ELEVENLABS_API_KEY;
         this.baseUrl = 'https://api.elevenlabs.io/v1';
     }
     static characterToVoiceIdMapping = {

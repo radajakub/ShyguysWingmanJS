@@ -1,6 +1,8 @@
+const LLM_API_KEY = import.meta.env.VITE_LLM_API_KEY;
+
 export class LLM {
     constructor() {
-        this.apiKey = 'vvO2N5PA9dj8cO6BwcIB8oH4YRnQI3Tn';
+        this.apiKey = LLM_API_KEY;
     }
 
 

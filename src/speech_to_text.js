@@ -1,6 +1,8 @@
+const SPEECH2TEXT_API_KEY = import.meta.env.VITE_SPEECH2TEXT_API_KEY;
+
 export class SpeechToTextClient {
     constructor() {
-        this.apiKey = "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";
+        this.apiKey = SPEECH2TEXT_API_KEY;
         this.isRecording = false;
         this.mediaRecorder = null;
         this.audioChunks = [];
