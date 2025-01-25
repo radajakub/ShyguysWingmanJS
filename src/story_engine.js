@@ -1,5 +1,27 @@
+class ConversationLLM {
+    constructor() {
+        this.apiKey = 'orJ3CQG1yFXIwSu4PXgEucaIS72f1upX';
+    }
+    generate_conversation(entity1_personality, entity2_personality, past_conversation, output_format_prompt, num_lines) {
+        // Hardcoded result for testing
+        return {
+            conversation: [
+                "DJ: Hey there! What kind of music are you in the mood for?",
+                "Shyguy: Um... maybe something chill?",
+                "DJ: Coming right up! How about some lo-fi beats?",
+                "Shyguy: That sounds perfect, thanks...",
+                entity1_personality,
+                entity2_personality,
 
-import ConversationLLM from './conversation_llm';
+            ],
+            num_beers: 2,
+            game_over: false,
+            char1imgpath: "assets/shyguy.png",
+            char2imgpath: "assets/dj.png", 
+            new_song: "Lo-fi Beats to Relax/Study To"
+        };
+    }
+}
 
 class Bar {
     constructor() {
@@ -38,7 +60,7 @@ class Sister {
   }
 }
 
-class StoryEngine {
+export class StoryEngine {
   constructor(shyguy) {
     // Initialize story engine properties with provided shyguy instance
     this.shyguy = shyguy;
@@ -88,6 +110,7 @@ class StoryEngine {
     const conversation = conversation_json.conversation;
     const gameOver = conversation_json.game_over;
     this.bar.past_conversation += conversation;
+    console.log(conversation_json);
     return {conversation: conversation, char1imgpath: this.shyguy.imgpath, char2imgpath: this.bar.imgpath, gameOver: gameOver};
   }
 
