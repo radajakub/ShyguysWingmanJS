@@ -112,5 +112,3 @@ class StoryEngine {
     return {conversation: conversation, char1imgpath: this.shyguy.imgpath, char2imgpath: this.dj.imgpath, new_song: new_song};
   }
 }
-
-export default StoryEngine;
