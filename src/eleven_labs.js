@@ -6,10 +6,9 @@ class ElevenLabsClient {
     static characterToVoiceIdMapping = {
         "shyguy": "bGNROVfU5WbK6F0AyHII",
         "sister": "rCmVtv8cYU60uhlsOo1M",
-        
-        "hanna": "21m00Tcm4TlvDq8ikWAM",
-        "barman": "21m00Tcm4TlvDq8ikWAM",
-        "dj": "21m00Tcm4TlvDq8ikWAM",
+        "hanna": "MNVQDcciBpGwnmmzr2b4",
+        "barman": "4zVVKJJRwoOAAeUwtCQ1",
+        "dj": "T0pkYhIZ7UMOc26gqqeX",
     }
     async playAudioForCharacter(character, text) {
         const voiceId = ElevenLabsClient.characterToVoiceIdMapping[character];
