@@ -1,4 +1,4 @@
-class LLM {
+export class LLM {
     constructor() {
         this.apiKey = '***REMOVED***';
     }
@@ -118,6 +118,43 @@ class LLM {
             functionName: result.functionName,
             parameters: result.arguments
         };
+    }
+
+    async getJsonCompletion(systemPrompt, userInput) {
+        const messages = [
+            {
+                role: "system",
+                content: systemPrompt
+            },
+            {
+                role: "user",
+                content: userInput
+            }
+        ];
+
+        try {
+            const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'mistral-large-latest',
+                    messages: messages,
+                    temperature: 0.7,
+                    max_tokens: 256,
+                    response_format: { type: 'json_object' }
+                })
+            });
+
+            const data = await response.json();
+            return JSON.parse(data.choices[0].message.content);
+
+        } catch (error) {
+            console.error('JSON LLM Error:', error);
+            throw error;
+        }
     }
 }
 
