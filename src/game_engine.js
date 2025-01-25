@@ -1,6 +1,8 @@
 const WINGMAN_SPEED = 5;
 const SHYGUY_SPEED = 0.5;
 
+const IS_DEBUG = true;
+
 class SpriteEntity {
   constructor(x0, y0, imageSrc, speed = 0, width = 32, height = 32, frameRate = 8, frameCount = 4) {
     this.x = x0;
@@ -129,10 +131,10 @@ export class GameEngine {
     );
 
     this.targets = {
-      door: new Target("door", 0, 0, this.wall.width, this.wall.height),
+      door: new Target("door", this.wall.width, this.wall.height, this.wall.width, this.wall.height),
       girl: new Target(
         "girl",
-        this.canvasWidth - this.wall.width,
+        this.canvasWidth - this.wall.width - this.shyguySprite.width,
         this.canvasHeight / 2 - this.wall.height / 2,
         this.wall.width,
         this.wall.height
@@ -141,7 +143,6 @@ export class GameEngine {
   }
 
   init() {
-    console.log("ini)t game engine");
     this.canvas.width = this.canvasWidth;
     this.canvas.height = this.canvasHeight;
 
@@ -387,9 +388,23 @@ export class GameEngine {
   }
 
   checkTargetReached(sprite) {
-    const dx = Math.abs(sprite.x - sprite.target.x);
-    const dy = Math.abs(sprite.y - sprite.target.y);
-    return dx <= 1 && dy <= 1;
+    // Calculate sprite center
+    const spriteCenterX = sprite.x + sprite.width / 2;
+    const spriteCenterY = sprite.y + sprite.height / 2;
+
+    const targetCenterX = sprite.target.x + sprite.target.width / 2;
+    const targetCenterY = sprite.target.y + sprite.target.height / 2;
+
+    // Calculate distance from sprite center to target
+    const dx = Math.abs(spriteCenterX - targetCenterX);
+    const dy = Math.abs(spriteCenterY - targetCenterY);
+
+    // Check if target is within sprite boundaries
+    const isWithinBounds = dx <= sprite.width / 2 && dy <= sprite.height / 2;
+    if (isWithinBounds) {
+      console.log("target reached", sprite.target.label);
+    }
+    return isWithinBounds;
   }
 
   updateGuidedSpriteDirection(sprite) {
@@ -475,6 +490,16 @@ export class GameEngine {
       this.wingmanSprite.width,
       this.wingmanSprite.height
     );
+
+    if (IS_DEBUG) {
+      for (const target in this.targets) {
+        const { x, y, width, height } = this.targets[target];
+        this.ctx.beginPath();
+        this.ctx.arc(x + width / 2, y + height / 2, 10, 0, 2 * Math.PI);
+        this.ctx.fillStyle = "red";
+        this.ctx.fill();
+      }
+    }
   }
 
   switchView(viewName) {
