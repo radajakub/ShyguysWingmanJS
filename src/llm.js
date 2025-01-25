@@ -84,15 +84,15 @@ class LLM {
 
     async getFunctionKey(functionDescriptions, prompt) {
         // Convert the key-value pairs into the tools format required by the API
-        const tools = functionDescriptions.map(({ key, description }) => ({
+        const tools = functionDescriptions.map(({ key, description, parameters = {} }) => ({
             type: "function",
             function: {
                 name: key,
                 description: description,
                 parameters: {
                     type: "object",
-                    properties: {},
-                    required: []
+                    properties: parameters,
+                    required: Object.keys(parameters) // Make all parameters required
                 }
             }
         }));
@@ -104,7 +104,10 @@ class LLM {
             tools
         );
 
-        return result.functionName;
+        return {
+            functionName: result.functionName,
+            parameters: result.arguments
+        };
     }
 }
 
@@ -113,28 +116,21 @@ export default LLM;
 
 
 // Function call Usage example
-// const tools = [
+// const functionDescriptions = [
 //     {
-//         type: "function",
-//         function: {
-//             name: "someFunction",
-//             description: "Description of the function",
-//             parameters: {
-//                 type: "object",
-//                 properties: {
-//                     param1: {
-//                         type: "string",
-//                         description: "Description of param1"
-//                     }
-//                 },
-//                 required: ["param1"]
+//         key: "searchProducts",
+//         description: "Search for products in the catalog",
+//         parameters: {
+//             query: {
+//                 type: "string",
+//                 description: "Search query"
+//             },
+//             category: {
+//                 type: "string",
+//                 description: "Product category"
 //             }
 //         }
 //     }
 // ];
 
-// const result = await llm.getFunctionCall(
-//     "System prompt",
-//     "User input",
-//     tools
-// );
+// const result = await llm.getFunctionKey(functionDescriptions, "Find red shoes in footwear");
