@@ -57,12 +57,14 @@ class SpriteImage {
 }
 
 class Target {
-  constructor(label, x, y, width, height) {
+  constructor(label, x, y, width, height, color, enabled = true) {
     this.label = label;
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
+    this.debugColor = color;
+    this.enabled = enabled;
   }
 }
 
@@ -96,6 +98,13 @@ export class GameEngine {
     this.run = this.run.bind(this);
     this.handleKeyDown = this.handleKeyDown.bind(this);
     this.handleKeyUp = this.handleKeyUp.bind(this);
+    this.setNewTarget = this.setNewTarget.bind(this);
+    this.checkTargetReached = this.checkTargetReached.bind(this);
+    this.updateGuidedSpriteDirection = this.updateGuidedSpriteDirection.bind(this);
+    this.updateSprite = this.updateSprite.bind(this);
+    this.handleSpriteCollision = this.handleSpriteCollision.bind(this);
+    this.initDebugControls = this.initDebugControls.bind(this);
+    this.stopShyguyAnimation = this.stopShyguyAnimation.bind(this);
 
     this.pushEnabled = false;
 
@@ -131,13 +140,42 @@ export class GameEngine {
     );
 
     this.targets = {
-      door: new Target("door", this.wall.width, this.wall.height, this.wall.width, this.wall.height),
+      exit: new Target("exit", this.wall.width, this.wall.height, this.wall.width, this.wall.height, "red", true),
       girl: new Target(
         "girl",
         this.canvasWidth - this.wall.width - this.shyguySprite.width,
         this.canvasHeight / 2 - this.wall.height / 2,
         this.wall.width,
-        this.wall.height
+        this.wall.height,
+        "pink",
+        true
+      ),
+      bar: new Target(
+        "bar",
+        this.canvasWidth / 2 - this.wall.width / 2,
+        this.canvasHeight - this.wall.height - this.shyguySprite.width,
+        this.wall.width,
+        this.wall.height,
+        "blue",
+        true
+      ),
+      dj: new Target(
+        "dj",
+        this.wall.width,
+        this.canvasHeight / 2 - this.wall.height / 2,
+        this.wall.width,
+        this.wall.height,
+        "green",
+        true
+      ),
+      sister: new Target(
+        "sister",
+        this.canvasWidth - this.wall.width - this.shyguySprite.width,
+        this.wall.height,
+        this.wall.width,
+        this.wall.height,
+        "yellow",
+        true
       ),
     };
   }
@@ -234,16 +272,6 @@ export class GameEngine {
 
   updateGuidedSprite() {
     if (!this.shyguySprite.target) return;
-
-    if (this.checkTargetReached(this.shyguySprite)) {
-      this.shyguySprite.x = this.shyguySprite.target.x;
-      this.shyguySprite.y = this.shyguySprite.target.y;
-      this.shyguySprite.moving = false;
-      this.shyguySprite.frameX = 0;
-      this.shyguySprite.target.reached = true;
-      this.shyguySprite.target = null;
-      return;
-    }
 
     const dx = this.shyguySprite.target.x - this.shyguySprite.x;
     const dy = this.shyguySprite.target.y - this.shyguySprite.y;
@@ -368,7 +396,6 @@ export class GameEngine {
   }
 
   handleKeyDown(e) {
-    console.log(this.keys);
     if (e.key in this.keys) {
       this.keys[e.key] = true;
       this.wingmanSprite.moving = true;
@@ -383,17 +410,19 @@ export class GameEngine {
   }
 
   setNewTarget(target) {
-    this.shyguySprite.setTarget(target);
-    this.updateGuidedSpriteDirection(this.shyguySprite);
+    if (target && target.enabled) {
+      this.shyguySprite.setTarget(target);
+      this.updateGuidedSpriteDirection(this.shyguySprite);
+    }
   }
 
-  checkTargetReached(sprite) {
+  checkTargetReached(sprite, target) {
     // Calculate sprite center
     const spriteCenterX = sprite.x + sprite.width / 2;
     const spriteCenterY = sprite.y + sprite.height / 2;
 
-    const targetCenterX = sprite.target.x + sprite.target.width / 2;
-    const targetCenterY = sprite.target.y + sprite.target.height / 2;
+    const targetCenterX = target.x + target.width / 2;
+    const targetCenterY = target.y + target.height / 2;
 
     // Calculate distance from sprite center to target
     const dx = Math.abs(spriteCenterX - targetCenterX);
@@ -401,9 +430,6 @@ export class GameEngine {
 
     // Check if target is within sprite boundaries
     const isWithinBounds = dx <= sprite.width / 2 && dy <= sprite.height / 2;
-    if (isWithinBounds) {
-      console.log("target reached", sprite.target.label);
-    }
     return isWithinBounds;
   }
 
@@ -434,7 +460,7 @@ export class GameEngine {
     this.gameFrame++;
 
     // Update Shyguy position
-    if (this.shyguySprite.target) {
+    if (this.shyguySprite.target && this.shyguySprite.target.enabled) {
       this.updateGuidedSprite(this.shyguySprite);
       if (this.shyguySprite.moving) {
         this.updateSpriteAnimation(this.shyguySprite);
@@ -446,6 +472,27 @@ export class GameEngine {
     if (this.wingmanSprite.moving) {
       this.updateSpriteAnimation(this.wingmanSprite);
     }
+
+    for (const target of Object.values(this.targets)) {
+      const isClose = this.checkTargetReached(this.shyguySprite, target);
+
+      // TODO: reenable the target so the player can visit it again
+      if (!target.enabled) {
+        continue;
+      }
+
+      if (isClose) {
+        target.enabled = false;
+        this.stopShyguyAnimation(target);
+        break;
+      }
+    }
+  }
+
+  stopShyguyAnimation(target) {
+    this.shyguySprite.ving = false;
+    this.shyguySprite.frameX = 0;
+    this.shyguySprite.target = null;
   }
 
   draw() {
@@ -493,10 +540,10 @@ export class GameEngine {
 
     if (IS_DEBUG) {
       for (const target in this.targets) {
-        const { x, y, width, height } = this.targets[target];
+        const { x, y, width, height, debugColor } = this.targets[target];
         this.ctx.beginPath();
         this.ctx.arc(x + width / 2, y + height / 2, 10, 0, 2 * Math.PI);
-        this.ctx.fillStyle = "red";
+        this.ctx.fillStyle = debugColor;
         this.ctx.fill();
       }
     }
@@ -537,13 +584,19 @@ export class GameEngine {
     const switchToDialogueBtn = document.getElementById("switchToDialogueBtn");
     const targetDoorBtn = document.getElementById("targetDoorBtn");
     const targetGirlBtn = document.getElementById("targetGirlBtn");
+    const targetBarBtn = document.getElementById("targetBarBtn");
+    const targetDjBtn = document.getElementById("targetDjBtn");
+    const targetSisterBtn = document.getElementById("targetSisterBtn");
     const stopNavBtn = document.getElementById("stopNavBtn");
     const togglePushBtn = document.getElementById("togglePushBtn");
 
     switchToGameBtn.addEventListener("click", () => this.showGameView());
     switchToDialogueBtn.addEventListener("click", () => this.showDialogueView());
-    targetDoorBtn.addEventListener("click", () => this.setNewTarget(this.targets.door));
+    targetDoorBtn.addEventListener("click", () => this.setNewTarget(this.targets.exit));
     targetGirlBtn.addEventListener("click", () => this.setNewTarget(this.targets.girl));
+    targetBarBtn.addEventListener("click", () => this.setNewTarget(this.targets.bar));
+    targetDjBtn.addEventListener("click", () => this.setNewTarget(this.targets.dj));
+    targetSisterBtn.addEventListener("click", () => this.setNewTarget(this.targets.sister));
     stopNavBtn.addEventListener("click", () => this.setNewTarget(null));
 
     // Add push mechanics toggle
