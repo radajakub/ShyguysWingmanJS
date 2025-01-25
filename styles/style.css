@@ -167,17 +167,20 @@ body {
   box-sizing: border-box;
 }
 
+.view-controls,
+.game-controls {
+  display: flex;
+  gap: 5px;
+}
+
 .debug-button {
-  padding: 8px 16px;
-  border: none;
+  padding: 5px 10px;
   border-radius: 4px;
-  background: #666;
-  color: white;
+  border: 1px solid #ccc;
+  background: #f0f0f0;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
 }
 
 .debug-button:hover {
-  background: #888;
+  background: #e0e0e0;
 }
