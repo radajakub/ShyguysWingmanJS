@@ -9,13 +9,17 @@ class Bar {
         this.imgpath = "assets/bartender.png";
         this.output_format_prompt = "";
         this.functionDescriptions = [{
-                key: "analyzeBeerConsumption",
-                description: "Analyze the conversation to determine how many beers were consumed",
+                key: "analyzeConsumption",
+                description: "Analyze the conversation to determine how many beers were consumed. Also if heavy alcohol was consumed",
                 parameters: {
                     num_beers: {
                         type: "number",
                         description: "Total number of beers mentioned as being consumed in the conversation"
                     },
+                    heavy_alcohol: {
+                        type: "boolean",
+                        description: "If heavy alcohol was consumed, True"
+                    }
                 }
             }];
         this.functionPrompt = "";
@@ -55,7 +59,7 @@ class DJ {
 class Sister {
   constructor() {
       // Initialize Sister properties
-      this.name = "sister";
+      this.name = "Jessica's sister";
       this.mood = 1;
       this.situation_prompt = "This is a conversation with the sister of Jessica.";
       this.personality = "This is the sister of Jessica. She is a deeply religious Christian. She is helpful in her second answer, her first answer is rude. If asked about the favourite song of the girl, she says it is 'Call me maybe'.";
@@ -93,20 +97,20 @@ class Girl {
     this.shyguy = shyguy;
     this.functionDescriptions = [{
       key: "analyzeLiking",
-      description: "Analyze if the conversation is nice or not",
+      description: "Analyze if Jessica is happy with the conversation or not",
       parameters: {
         likes_shyguy: {
           type: "boolean",
-          description: "If the conversation is nice, True",
+          description: "If Jessica is happy with the conversation, True",
         },
       }
     }];
-    this.functionPrompt = "Analyze if the conversation is nice or not.";
+    this.functionPrompt = "Analyze if Jessica is happy with the conversation or not";
   }
 
   getSystemPrompt() {
     if (this.shyguy.song_playing === "Call me maybe") {
-      return `${this.personality}. She is very happy with the song playing. The first thing she says is that she really likes the music. Therefore she is nice and she likes shyguy. However, if he talks about algorithms, she does not like it and she becomes mean.`;
+      return `${this.personality}. She is very happy with the song playing. The first thing she says is that she really likes the music. Therefore she is nice and she likes shyguy. However, if he talks about algorithms, she does not like it and she becomes mean. Also if he talks with a lot of hesitation, she does not like it and she becomes mean.`;
     }
     else {
       return `${this.personality}. She does not like the song that shyguy is playing. The first thing she says is that the song is terrible. Then she is mean all the time.`;
@@ -141,6 +145,7 @@ export class StoryEngine {
 
   async generalInteraction(targetEntity){
     await this.shyguy.learnLesson(targetEntity.name);
+    console.log("Lesson for " + targetEntity.name + this.shyguy.lessons_learned)
     const conversation_llm = new ConversationLLM("Shyguy", 
           targetEntity.name, 
           this.shyguy.getSystemPrompt(), 
@@ -189,7 +194,7 @@ export class StoryEngine {
   }
 
   updateStates(conversation_analysis, targetName){
-    if (targetName === "sister"){
+    if (targetName === "Jessica's sister"){
       if (conversation_analysis.parameters.mood !== "none") {
         this.sister.mood = conversation_analysis.parameters.mood;
       }
@@ -197,6 +202,8 @@ export class StoryEngine {
     else if (targetName === "bartender"){
       if (conversation_analysis.parameters.num_beers !== "none") {
         this.shyguy.num_beers += Number(conversation_analysis.parameters.num_beers);
+        this.shyguy.courage += 2*Number(conversation_analysis.parameters.num_beers);
+        this.shyguy.num_bears += 3*Number(conversation_analysis.parameters.heavy_alcohol === true);
         console.log("Shyguy num_beers inside updateStates: " + this.shyguy.num_beers);
       }
     }
