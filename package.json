@@ -1,0 +1,13 @@
+{
+  "name": "shyguys-wingman-js",
+  "version": "1.0.0",
+  "description": "ShyguysWingmanJS project",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "http-server -o src/index.html"
+  },
+  "dependencies": {
+    "elevenlabs": "^1.50.4",
+    "http-server": "^14.1.1"
+  }
+}
