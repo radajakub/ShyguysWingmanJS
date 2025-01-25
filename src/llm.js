@@ -1,6 +1,6 @@
 class LLM {
     constructor() {
-        this.apiKey = 'orJ3CQG1yFXIwSu4PXgEucaIS72f1upX';
+        this.apiKey = '***REMOVED***';
     }
 
     async getChatCompletion(systemPrompt, userInput) {

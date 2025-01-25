@@ -1,3 +1,5 @@
+import LLM from "./llm";
+
 export class ConversationLLM {
     constructor(character1Prompt, character2Prompt, outputFormatPrompt) {
         this.character1Prompt = character1Prompt;
