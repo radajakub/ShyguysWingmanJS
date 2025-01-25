@@ -3,6 +3,7 @@ class LLM {
         this.apiKey = 'vvO2N5PA9dj8cO6BwcIB8oH4YRnQI3Tn';
     }
 
+
     async getChatCompletion(systemPrompt, userInput) {
         const messages = [
             {
