@@ -11,7 +11,7 @@ export class Shyguy {
     }
 
     getSystemPrompt() {
-        return `${this.personality}. He had ${this.num_beers} numbers of beers and his courage is ${this.courage} on the level 1 to 10. The higher the number of beers, the more drunk he sounds. After having 3 bears, he says single words with a lot of hesitation. If courage is low, he hesitates to speak. Follow the following lessons: ${this.lessons_learned}`;
+        return `${this.personality}. He had ${this.num_beers} numbers of beers and his courage is ${this.courage} on the level 1 to 10. The higher the number of beers, the more drunk he sounds. After having 3 bears, he says single words with a lot of hesitation and says that he feels bad and he's about to throw up. If courage is low, he hesitates to speak. Follow the following lessons: ${this.lessons_learned}`;
     }
 
     appendLesson(lesson) {
@@ -28,13 +28,17 @@ export class Shyguy {
     }
 
     getAvailableActions() {
-        // When sober, can only go to the bar
+        // When sober, can only go to the bar or home
         if (this.num_beers === 0) {
             return {
                 "go_bar": {
                     description: "Head to the bar for liquid courage",
                     location: "bar",
-                }
+                },
+                "go_home": {
+                    description: "Give up and head home",
+                    location: "exit",
+                },
             };
         }
 
