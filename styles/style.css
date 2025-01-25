@@ -184,3 +184,37 @@ body {
 .debug-button:hover {
   background: #e0e0e0;
 }
+
+/* Chat Message Styles */
+.chat-message {
+  margin-bottom: 15px;
+  display: flex;
+}
+
+.chat-message.shyguy {
+  justify-content: flex-start;
+}
+
+.chat-message.wingman {
+  justify-content: flex-end;
+}
+
+.message-bubble {
+  max-width: 70%;
+  padding: 10px 15px;
+  border-radius: 15px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.shyguy .message-bubble {
+  background-color: #e9ecef;
+  color: #000;
+  border-bottom-left-radius: 5px;
+}
+
+.wingman .message-bubble {
+  background-color: #007bff;
+  color: white;
+  border-bottom-right-radius: 5px;
+}
