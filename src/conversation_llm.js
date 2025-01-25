@@ -1,13 +1,15 @@
 import LLM from "./llm";
 
 export class ConversationLLM {
-    constructor(character1Name, character2Name, character1Prompt, character2Prompt, outputFormatPrompt, functionDescriptions) {
+    constructor(character1Name, character2Name, character1Prompt, character2Prompt, outputFormatPrompt, functionDescriptions, functionPrompt) {
         this.character1Name = character1Name;
         this.character2Name = character2Name;
         this.character1Prompt = character1Prompt;
         this.character2Prompt = character2Prompt;
         this.outputFormatPrompt = outputFormatPrompt;
         this.functionDescriptions = functionDescriptions;
+        this.functionPrompt = functionPrompt;
+
     }
 
     async generateConversation(numTurns = 3) {
@@ -64,16 +66,17 @@ export class ConversationLLM {
             //         },
             //     }
             // }];
+            //`Analyze this conversation and determine how many beers were consumed: ${JSON.stringify(conversation)}`
 
-            const beerAnalysis = await llm.getFunctionKey(
+
+            const analysis = await llm.getFunctionKey(
                 this.functionDescriptions,
-                `Analyze this conversation and determine how many beers were consumed: ${JSON.stringify(conversation)}`
+                this.functionPrompt + JSON.stringify(conversation)
             );
 
             return {
                 conversation,
-                beerCount: beerAnalysis.parameters.totalBeers,
-                beerAnalysisExplanation: beerAnalysis.parameters.explanation
+                analysis
             };
         } catch (error) {
             console.error('Error generating conversation:', error);
