@@ -91,7 +91,17 @@ class LLM {
                 description: description,
                 parameters: {
                     type: "object",
-                    properties: parameters,
+                    properties: {
+                        ...Object.fromEntries(
+                            Object.entries(parameters).map(([paramName, paramConfig]) => [
+                                paramName,
+                                {
+                                    type: paramConfig.type || "string", // Use provided type or default to "string"
+                                    description: paramConfig.description
+                                }
+                            ])
+                        )
+                    },
                     required: Object.keys(parameters) // Make all parameters required
                 }
             }
@@ -125,9 +135,13 @@ export default LLM;
 //                 type: "string",
 //                 description: "Search query"
 //             },
-//             category: {
-//                 type: "string",
-//                 description: "Product category"
+//             maxPrice: {
+//                 type: "number",
+//                 description: "Maximum price filter"
+//             },
+//             inStock: {
+//                 type: "boolean",
+//                 description: "Filter for in-stock items only"
 //             }
 //         }
 //     }
