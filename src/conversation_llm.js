@@ -1,11 +1,12 @@
 import LLM from "./llm";
 
 export class ConversationLLM {
-    constructor(character1Name, character2Name, character1Prompt, character2Prompt, outputFormatPrompt, functionDescriptions, functionPrompt) {
+    constructor(character1Name, character2Name, character1Prompt, character2Prompt, situation_prompt, outputFormatPrompt, functionDescriptions, functionPrompt) {
         this.character1Name = character1Name;
         this.character2Name = character2Name;
         this.character1Prompt = character1Prompt;
         this.character2Prompt = character2Prompt;
+        this.situation_prompt = situation_prompt;
         this.outputFormatPrompt = outputFormatPrompt;
         this.functionDescriptions = functionDescriptions;
         this.functionPrompt = functionPrompt;
@@ -18,16 +19,13 @@ export class ConversationLLM {
             const llm = new LLM();
             
             for (let i = 0; i < numTurns; i++) {
-                // Add 1 second delay between turns
-                if (i > 0) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
                 
                 // Alternate between characters for each turn
                 const isCharacter1Turn = i % 2 === 0;
                 const currentSpeaker = isCharacter1Turn ? this.character1Prompt : this.character2Prompt;
                 const currentListener = isCharacter1Turn ? this.character2Prompt : this.character1Prompt;
                 const currentSpeakerName = isCharacter1Turn ? this.character1Name : this.character2Name;
+                const currentListenerName = isCharacter1Turn ? this.character2Name : this.character1Name;
                 
                 // Format the conversation history as a proper chat message array
                 const conversationHistory = [...conversation];
@@ -35,7 +33,7 @@ export class ConversationLLM {
                 // Create system message for current speaker
                 const systemMessage = {
                     role: 'system',
-                    content: `You are: ${currentSpeaker}\nYou are talking to: ${currentListener}\n${this.outputFormatPrompt}`
+                    content: `${this.situation_prompt}\nRoleplay as: ${currentSpeakerName}\nMake only the response to the user. Only speech, no speech style. You have the following personality: ${currentSpeaker}. You talk to ${currentListenerName}.`
                 };
 
                 // Get response from LLM with proper message format
