@@ -46,6 +46,7 @@ export class Game {
       this.gameEngine.playAgainBtn?.removeEventListener("click", this.gameEngine.handlePlayAgain);
       this.gameEngine.microphoneButton?.removeEventListener("click", this.gameEngine.handleMicrophone);
       this.gameEngine.startGameBtn?.removeEventListener("click", this.gameEngine.handleStartGame);
+      this.gameEngine.dialogueNextButton?.removeEventListener("click", this.gameEngine.handleDialogueNext);
 
       // Stop the game loop
       this.gameEngine.shouldContinue = false;
