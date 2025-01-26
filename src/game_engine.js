@@ -2,7 +2,7 @@ import { BAR_LABEL, DJ_LABEL, EXIT_LABEL, GIRL_LABEL, SISTER_LABEL, WINGMAN_LABE
 import { nameToLabel } from "./story_engine.js";
 
 const WINGMAN_SPEED = 5;
-const SHYGUY_SPEED = 0.1;
+const SHYGUY_SPEED = 0.5;
 
 const IS_DEBUG = true;
 
@@ -74,19 +74,20 @@ class Target {
 export class GameEngine {
   static introMessages = [
     {
-      message: "Hey, I'm here to help you get out of here.",
+      message:
+        "Hey man, this is really not my cup of tea. I see Jessica in the corner, I wonder if I can finally tell her I love her.",
       character: SHYGUY_LABEL,
     },
     {
-      message: "Hey, I'm here to help you get out of here.",
+      message: "Man, tonight is your night. I'll get you through it and you'll go home with Jessica.",
       character: WINGMAN_LABEL,
     },
     {
-      message: "Hey, I'm here to help you get out of here.",
+      message: "Geez, that's impossible! Even if I replay the night a million times, I couldn't do it.",
       character: SHYGUY_LABEL,
     },
     {
-      message: "Hey, I'm here to help you get out of here.",
+      message: "Okay, just follow my advice!",
       character: WINGMAN_LABEL,
     },
   ];
@@ -252,8 +253,17 @@ export class GameEngine {
     // Move character images to class state
     this.leftCharacterImg = document.getElementById("leftCharacterImg");
     this.rightCharacterImg = document.getElementById("rightCharacterImg");
-    this.rightCharacterImg.style.display = "block";
+    this.hideCharacterImages();
+  }
+
+  showCharacterImages() {
     this.leftCharacterImg.style.display = "block";
+    this.rightCharacterImg.style.display = "block";
+  }
+
+  hideCharacterImages() {
+    this.leftCharacterImg.style.display = "none";
+    this.rightCharacterImg.style.display = "none";
   }
 
   init(firstRun = true) {
@@ -287,11 +297,12 @@ export class GameEngine {
     this.switchView("dialogue");
     this.leftCharacterImg.src = "/assets/assets/wingman.jpeg";
     this.rightCharacterImg.src = "/assets/assets/shyguy_headshot.jpeg";
+    this.showCharacterImages();
     this.hideContinueButton();
 
     for (const introMessage of GameEngine.introMessages) {
       const { message, character } = introMessage;
-      this.addChatMessage(this.dialogueChatContainer, message, character, false);
+      this.addChatMessage(this.dialogueChatContainer, message, character, true);
       if (this.voiceEnabled) {
         await this.elevenLabsClient.playAudioForCharacter(character, message);
       } else {
@@ -316,8 +327,9 @@ export class GameEngine {
 
   handleDialogueNext() {
     this.clearChat(this.dialogueChatContainer);
-    this.leftCharacterImg.style.display = "none";
-    this.rightCharacterImg.style.display = "none";
+    this.leftCharacterImg.src = "";
+    this.rightCharacterImg.src = "";
+    this.hideCharacterImages();
     this.hideNextButton();
     this.showContinueButton();
     this.handleStartGame();
