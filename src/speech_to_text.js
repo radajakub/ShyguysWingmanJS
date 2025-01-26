@@ -1,6 +1,6 @@
 export class SpeechToTextClient {
     constructor() {
-        this.apiKey = "***REMOVED***";
+        // this.apiKey = "HF_API_KEY";
         this.isRecording = false;
         this.mediaRecorder = null;
         this.audioChunks = [];
