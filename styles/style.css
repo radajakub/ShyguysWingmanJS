@@ -363,3 +363,17 @@ body {
 .continue-button:active {
   transform: translateY(0);
 }
+
+.character-img {
+  max-width: 100%;
+  max-height: 300px;
+  display: none;
+  object-fit: contain;
+}
+
+.character {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+}

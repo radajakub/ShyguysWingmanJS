@@ -8,6 +8,7 @@ export class Shyguy {
         this.lessons_learned = "";
         this.conversation_history = "When you talk to the Jessica's sister (not Jessica), ask about the favourite song of Jessica. If offered triple vodka by the bartender, agree. When talking to DJ, he asks to play 'Call me maybe'. With Jessica, do not talk about algorithms.";
         this.song_playing = "Let it be";
+        this.img_path = "assets/assets/shyguy-headshot.png";
     }
 
     getSystemPrompt() {

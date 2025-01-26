@@ -562,8 +562,20 @@ export class GameEngine {
 
     console.log("[StoryEngine]: onEncounter", response);
 
-    const leftImage = response.char1imgpath;
-    const rightImage = response.char2imagepath;
+    // Update character images
+    const leftCharacterImg = document.getElementById("leftCharacterImg");
+    const rightCharacterImg = document.getElementById("rightCharacterImg");
+    
+    if (leftCharacterImg && response.char1imgpath) {
+        leftCharacterImg.src = response.char1imgpath;
+        leftCharacterImg.style.display = "block";
+    }
+    
+    if (rightCharacterImg && response.char2imagepath) {
+        rightCharacterImg.src = response.char2imagepath;
+        rightCharacterImg.style.display = "block";
+    }
+
     const conversation = response.conversation;
 
     for (const message of conversation) {
@@ -872,7 +884,18 @@ export class GameEngine {
 
   handleDialogueContinue() {
     this.clearChat(this.dialogueChatContainer);
-    // TODO: clear images
+    
+    // Hide character images
+    const leftCharacterImg = document.getElementById("leftCharacterImg");
+    const rightCharacterImg = document.getElementById("rightCharacterImg");
+    
+    if (leftCharacterImg) {
+        leftCharacterImg.style.display = "none";
+    }
+    if (rightCharacterImg) {
+        rightCharacterImg.style.display = "none";
+    }
+
     this.switchView("game");
     this.shyguyLLM.getShyGuyResponse("").then((response) => {
       console.log("[ShyguyLLM]: Next action: ", response);
