@@ -134,6 +134,7 @@ export class GameEngine {
     this.handleSendMessage = this.handleSendMessage.bind(this);
     this.handleMicrophone = this.handleMicrophone.bind(this);
     this.handleDialogueContinue = this.handleDialogueContinue.bind(this);
+    this.handleStartGame = this.handleStartGame.bind(this);
     this.setGameOver = this.setGameOver.bind(this);
 
     this.pushEnabled = false;
@@ -222,9 +223,13 @@ export class GameEngine {
     this.playAgainBtn = document.getElementById("playAgainBtn");
 
     this.isRecording = false;
+
+    // Add these lines
+    this.introView = document.getElementById("introView");
+    this.startGameBtn = document.getElementById("startGameBtn");
   }
 
-  init() {
+  init(firstRun = true) {
     this.canvas.width = this.canvasWidth;
     this.canvas.height = this.canvasHeight;
 
@@ -232,13 +237,26 @@ export class GameEngine {
     document.addEventListener("keyup", this.handleKeyUp);
 
     // Initialize with game view
-    this.switchView("game");
 
     this.sendButton.addEventListener("click", this.handleSendMessage);
     this.dialogueContinueButton.addEventListener("click", this.handleDialogueContinue);
     this.playAgainBtn.addEventListener("click", this.handlePlayAgain);
     this.microphoneButton.addEventListener("click", this.handleMicrophone);
 
+    if (firstRun) {
+      this.startGameBtn.addEventListener("click", this.handleStartGame);
+      this.switchView("intro");
+    } else {
+      if (this.currentView !== "game") {
+        this.switchView("game");
+      }
+      this.run();
+      this.shyguySprite.setTarget(this.targets.exit);
+    }
+  }
+
+  async handleStartGame() {
+    this.switchView("game");
     this.run();
     this.shyguySprite.setTarget(this.targets.exit);
   }
@@ -679,12 +697,16 @@ export class GameEngine {
     this.currentView = viewName;
 
     // Hide all views first
+    this.introView.classList.remove("active");
     this.gameView.classList.remove("active");
     this.dialogueView.classList.remove("active");
     this.gameOverView.classList.remove("active");
 
     // Show the requested view
     switch (viewName) {
+      case "intro":
+        this.introView.classList.add("active");
+        break;
       case "game":
         this.gameView.classList.add("active");
         break;
@@ -883,7 +905,6 @@ export class GameEngine {
   }
 
   setGameOver(fromExit) {
-    // TODO: set the image and text
     if (fromExit) {
       this.gameOverText.textContent = "You lost! The Shyguy ran away!";
       return;

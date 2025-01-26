@@ -7,6 +7,8 @@ import { ElevenLabsClient } from "./eleven_labs.js";
 
 export class Game {
   constructor() {
+    this.firstRun = true;
+
     this.reset = this.reset.bind(this);
     this.initializeComponents();
   }
@@ -28,11 +30,12 @@ export class Game {
   }
 
   async run() {
-    this.gameEngine.init();
+    this.gameEngine.init(this.firstRun);
     this.gameEngine.setResetCallback(this.reset);
   }
 
   reset() {
+    this.firstRun = false;
     // Clean up old game engine
     if (this.gameEngine) {
       // Remove event listeners and clean up
@@ -42,15 +45,17 @@ export class Game {
       this.gameEngine.dialogueContinueButton?.removeEventListener("click", this.gameEngine.handleDialogueContinue);
       this.gameEngine.playAgainBtn?.removeEventListener("click", this.gameEngine.handlePlayAgain);
       this.gameEngine.microphoneButton?.removeEventListener("click", this.gameEngine.handleMicrophone);
+      this.gameEngine.startGameBtn?.removeEventListener("click", this.gameEngine.handleStartGame);
 
       // Stop the game loop
       this.gameEngine.shouldContinue = false;
     }
 
-    // Create fresh instances
-    this.initializeComponents();
+    setTimeout(() => {
+      // Create fresh instances
+      this.initializeComponents();
 
-    // Start new game
-    this.run();
+      this.run();
+    }, 100);
   }
 }
