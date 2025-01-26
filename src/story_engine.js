@@ -167,6 +167,8 @@ export class StoryEngine {
     console.log(conversation_output);
     
     this.updateStates(conversation_output.analysis, targetEntity.name);
+
+    console.log("shyguy courage: " + this.shyguy.courage);
     return {conversation: conversation, char1imgpath: this.shyguy.imgpath, char2imgpath: targetEntity.imgpath, gameOver: gameOver, gameSuccesful: gameSuccesful};
   }
 
@@ -203,8 +205,10 @@ export class StoryEngine {
       if (conversation_analysis.parameters.num_beers !== "none") {
         this.shyguy.num_beers += Number(conversation_analysis.parameters.num_beers);
         this.shyguy.courage += 2*Number(conversation_analysis.parameters.num_beers);
-        this.shyguy.num_bears += 3*Number(conversation_analysis.parameters.heavy_alcohol === true);
+        console.log("conversation_analysis.parameters.heavy_alcohol: " + Number(conversation_analysis.parameters.heavy_alcohol));
+        this.shyguy.num_beers += 3*Number(conversation_analysis.parameters.heavy_alcohol);
         console.log("Shyguy num_beers inside updateStates: " + this.shyguy.num_beers);
+        this.shyguy.courage += 3*Number(conversation_analysis.parameters.heavy_alcohol);
       }
     }
     else if (targetName === "DJ"){

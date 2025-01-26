@@ -1,14 +1,22 @@
 import { LLM } from './llm.js';
 export class ShyGuyLLM {
     constructor(shyguy) {
+
+        const availableActions = this.shyguy.getAvailableActions();
         this.llm = new LLM();
         this.shyguy = shyguy;
         this.baseSystemPrompt = `You are ShyGuy, a socially awkward character at a homecoming party. 
         Your responses should always include both an action and a dialogue, reflecting your nervous and awkward personality.
         Your responses should be in JSON format with two fields:
-        - action: A physical action or gesture you're making (keep it brief and awkward)
-        - dialogue: What you say out loud. `;
+        enum action {
+            ${Object.keys(availableActions).join(", ")}
         }
+            for example :
+        {
+            "action": "go_bar",
+            "dialogue": "Okay, let's go to the bar."
+        }`;
+    }
     
     getSystemPrompt(){
         let addToPrompt = "";
@@ -19,7 +27,7 @@ export class ShyGuyLLM {
             addToPrompt = `You are likely to go to the DJ or sister. You are very likely to go to the girl. You feel confident about talking to the girl.\n`;
         }
         if (this.shyguy.num_beers > 3){
-            addToPrompt = `You are drunk and you start talking about throwing up. You get annoying. You are very likely to go to the girl.\n`;
+            addToPrompt = `You are drunk and you start talking about throwing up. You get annoying. You are very likely to go to the\n`;
         }
         if (this.shyguy.courage < 3){
             addToPrompt = `You are shy and your dialogue should be more shy.`;

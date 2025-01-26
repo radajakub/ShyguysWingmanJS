@@ -6,12 +6,12 @@ export class Shyguy {
         this.courage = 1;
         this.personality = "This is the shy guy. He is shy and introverted. He is also a bit of a nerd. He likes Jessica. But with Jessica, he talks about algorithms.";
         this.lessons_learned = "";
-        this.conversation_history = "When you talk to the sister, ask about the favourite song of the girl. When at bar talking with bartender, buy always two beers. If offered triple vodka, agree. When talking to DJ, he asks to play 'Call me maybe'.";
+        this.conversation_history = "When you talk to the Jessica's sister (not Jessica), ask about the favourite song of Jessica. If offered triple vodka by the bartender, agree. When talking to DJ, he asks to play 'Call me maybe'. With Jessica, do not talk about algorithms.";
         this.song_playing = "Let it be";
     }
 
     getSystemPrompt() {
-        return `${this.personality}. He had ${this.num_beers} numbers of beers and his courage is ${this.courage} on the level 1 to 10. The higher the number of beers, the more drunk he sounds. After having 3 bears, he says single words with a lot of hesitation and says that he feels bad and he's about to throw up. If courage is low, he hesitates to speak. Follow the following lessons: ${this.lessons_learned}`;
+        return `${this.personality}. He had ${this.num_beers} numbers of beers and his courage is ${this.courage} on the level 1 to 10. If his courage is higher than 5, he is self-confident. After having 3 bears, he says single words with a lot of hesitation and says that he feels bad and he's about to throw up. If courage is low, he hesitates to speak. Follow the following lessons: ${this.lessons_learned}`;
     }
 
     appendLesson(lesson) {
@@ -21,10 +21,10 @@ export class Shyguy {
     async learnLesson(entityName){
         const summaryLLM = new LLM();
         const summary = await summaryLLM.getChatCompletion(
-            `Summarize in one sentence what Shyguy should say when talking to ${entityName}. Only if there is nothing relevant to say, say Nothing relevant.`,
+            `Summarize in one sentence what Shyguy should say when talking to ${entityName}. Do not confuse Jessica and Jessica's sister. If there is nothing relevant about what to say to Jessica, say Nothing relevant.`,
             this.conversation_history
         );
-        this.appendLesson(summary);
+        this.appendLesson(`When talking to ${entityName}, ${summary}`);
     }
 
     getAvailableActions() {
