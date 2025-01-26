@@ -24,7 +24,7 @@ class Bar {
     this.situation_prompt = "This conversation happens at the bar.";
     this.personality = "This is the bartender. He always offers triple vodka in his first answer.";
     // this.past_conversation = "";
-    this.imgpath = "assets/bartender.png";
+    this.imgpath = "assets/assets/barman.png";
     this.output_format_prompt = "";
     this.functionDescriptions = [
       {
@@ -58,7 +58,7 @@ class DJ {
     this.personality =
       "This is the DJ. He is very nice and helpful. He can only play songs from the options [Let it be, Call me maybe, Shape of you]. If asked to play a song, he will play it and not propose any other song.";
     // this.past_conversation = "";
-    this.imgpath = "assets/dj.png";
+    this.imgpath = "assets/assets/dj.png";
     this.output_format_prompt = "";
     this.functionDescriptions = [
       {
@@ -90,7 +90,7 @@ class Sister {
     this.personality =
       "This is the sister of Jessica. She is a deeply religious Christian. She is helpful in her second answer, her first answer is rude. If asked about the favourite song of the girl, she says it is 'Call me maybe'.";
     // this.past_conversation = "";
-    this.imgpath = "assets/sister.png";
+    this.imgpath = "assets/assets/sister.png";
     this.functionDescriptions = [
       {
         key: "analyzeMood",
@@ -121,7 +121,7 @@ class Girl {
     this.name = "Jessica";
     this.situation_prompt = "This is a conversation with the Jessica. She is the girl that shyguy likes.";
     this.personality = "This is Jessica. She is shy but nice. She likes the song 'Call me maybe'.";
-    this.imgpath = "assets/girl.png";
+    this.imgpath = "assets/assets/jessica.png";
     this.output_format_prompt = "";
     this.shyguy = shyguy;
     this.functionDescriptions = [
@@ -147,6 +147,39 @@ class Girl {
     }
   }
 }
+
+class Wingman {
+  constructor() {
+    this.name = "wingman";
+    this.situation_prompt = "This conversation happens with your wingman at the party.";
+    this.personality = "This is your wingman. He is experienced with dating and gives practical advice. He's supportive but direct, and always encourages confidence without being aggressive.";
+    this.imgpath = "assets/assets/wingman.png";
+    this.output_format_prompt = "";
+    this.functionDescriptions = [
+      {
+        key: "analyzeAdvice",
+        description: "Analyze the quality and impact of the conversation with the wingman",
+        parameters: {
+          confidence_boost: {
+            type: "number",
+            description: "How much confidence boost received on scale 1-5",
+          },
+          good_advice: {
+            type: "boolean",
+            description: "If practical, actionable advice was given, True",
+          },
+        },
+      },
+    ];
+    this.functionPrompt = "Analyze how helpful the wingman's advice was and how much it boosted confidence";
+  }
+
+  getSystemPrompt() {
+    return `${this.personality}.`;
+  }
+}
+
+
 
 export class StoryEngine {
   constructor(shyguy) {
@@ -199,6 +232,7 @@ export class StoryEngine {
     console.log(conversation_output);
 
     this.updateStates(conversation_output.analysis, targetEntity.name);
+
     return {
       conversation: conversation,
       char1imgpath: this.shyguy.imgpath,
@@ -238,11 +272,10 @@ export class StoryEngine {
     } else if (targetName === "bartender") {
       if (conversation_analysis.parameters.num_beers !== "none") {
         this.shyguy.num_beers += Number(conversation_analysis.parameters.num_beers);
-        this.shyguy.courage += 2*Number(conversation_analysis.parameters.num_beers);
-        console.log("conversation_analysis.parameters.heavy_alcohol: " + Number(conversation_analysis.parameters.heavy_alcohol));
-        this.shyguy.num_beers += 3*Number(conversation_analysis.parameters.heavy_alcohol);
+        this.shyguy.courage += 2 * Number(conversation_analysis.parameters.num_beers);
+        this.shyguy.num_bears += 3 * Number(conversation_analysis.parameters.heavy_alcohol === true);
         console.log("Shyguy num_beers inside updateStates: " + this.shyguy.num_beers);
-        this.shyguy.courage += 3*Number(conversation_analysis.parameters.heavy_alcohol);
+        this.shyguy.courage += 3 * Number(conversation_analysis.parameters.heavy_alcohol);
       }
     } else if (targetName === "DJ") {
       if (conversation_analysis.parameters.song !== "none") {

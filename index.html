@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="/styles/style.css" />
     <!-- Font Awesome for microphone icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div class="status-bar">
@@ -38,7 +41,7 @@
     <div class="dialogue-view" id="dialogueView">
       <div class="character-section">
         <div class="character left-character">
-          <!-- Left character image placeholder -->
+          <img id="leftCharacterImg" class="character-img" />
         </div>
         <div class="dialogue-box">
           <div class="dialogue-messages" id="dialogueMessages">
@@ -46,7 +49,7 @@
           </div>
         </div>
         <div class="character right-character">
-          <!-- Right character image placeholder -->
+          <img id="rightCharacterImg" class="character-img" />
         </div>
       </div>
       <div class="dialogue-controls">
@@ -56,8 +59,11 @@
 
     <div class="game-over-view" id="gameOverView">
       <div class="game-over-content">
-        <div class="game-over-image">
+        <div class="game-over-image" id="gameOverImage">
           <!-- Background image will be set via CSS -->
+        </div>
+        <div class="game-over-text" id="gameOverText">
+          <!-- Text will be set via JS -->
         </div>
         <div class="game-over-controls">
           <button id="playAgainBtn" class="play-again-button">Play Again</button>
@@ -66,10 +72,6 @@
     </div>
 
     <div class="debug-controls">
-      <div class="view-controls">
-        <button id="switchToGameBtn" class="debug-button">Switch to Game View</button>
-        <button id="switchToDialogueBtn" class="debug-button">Switch to Dialogue View</button>
-      </div>
       <div class="game-controls">
         <button id="targetDoorBtn" class="debug-button">Target Door</button>
         <button id="targetGirlBtn" class="debug-button">Target Girl</button>
@@ -79,6 +81,7 @@
         <button id="stopNavBtn" class="debug-button">Stop Navigation</button>
         <button id="togglePushBtn" class="debug-button">Enable Push</button>
         <button id="speedBoostBtn" class="debug-button">Speed Boost</button>
+        <button id="toggleVoiceBtn" class="debug-button">Enable Voice</button>
       </div>
     </div>
     <script src="./src/index.js" type="module"></script>
