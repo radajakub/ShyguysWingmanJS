@@ -72,6 +72,25 @@ class Target {
 }
 
 export class GameEngine {
+  static introMessages = [
+    {
+      message: "Hey, I'm here to help you get out of here.",
+      character: SHYGUY_LABEL,
+    },
+    {
+      message: "Hey, I'm here to help you get out of here.",
+      character: WINGMAN_LABEL,
+    },
+    {
+      message: "Hey, I'm here to help you get out of here.",
+      character: SHYGUY_LABEL,
+    },
+    {
+      message: "Hey, I'm here to help you get out of here.",
+      character: WINGMAN_LABEL,
+    },
+  ];
+
   constructor(shyguy, shyguyLLM, storyEngine, speechToTextClient, elevenLabsClient) {
     this.shyguy = shyguy;
     this.shyguyLLM = shyguyLLM;
@@ -106,6 +125,7 @@ export class GameEngine {
 
     this.dialogueChatContainer = document.getElementById("dialogueMessages");
     this.dialogueContinueButton = document.getElementById("dialogueContinueButton");
+    this.dialogueNextButton = document.getElementById("dialogueNextButton");
 
     this.gameFrame = 0;
     this.keys = {
@@ -134,8 +154,9 @@ export class GameEngine {
     this.handleSendMessage = this.handleSendMessage.bind(this);
     this.handleMicrophone = this.handleMicrophone.bind(this);
     this.handleDialogueContinue = this.handleDialogueContinue.bind(this);
-    this.handleStartGame = this.handleStartGame.bind(this);
+    this.handleFirstStartGame = this.handleFirstStartGame.bind(this);
     this.setGameOver = this.setGameOver.bind(this);
+    this.handleDialogueNext = this.handleDialogueNext.bind(this);
 
     this.pushEnabled = false;
     this.voiceEnabled = !IS_DEBUG;
@@ -227,6 +248,12 @@ export class GameEngine {
     // Add these lines
     this.introView = document.getElementById("introView");
     this.startGameBtn = document.getElementById("startGameBtn");
+
+    // Move character images to class state
+    this.leftCharacterImg = document.getElementById("leftCharacterImg");
+    this.rightCharacterImg = document.getElementById("rightCharacterImg");
+    this.rightCharacterImg.style.display = "block";
+    this.leftCharacterImg.style.display = "block";
   }
 
   init(firstRun = true) {
@@ -240,11 +267,12 @@ export class GameEngine {
 
     this.sendButton.addEventListener("click", this.handleSendMessage);
     this.dialogueContinueButton.addEventListener("click", this.handleDialogueContinue);
+    this.dialogueNextButton.addEventListener("click", this.handleDialogueNext);
     this.playAgainBtn.addEventListener("click", this.handlePlayAgain);
     this.microphoneButton.addEventListener("click", this.handleMicrophone);
 
     if (firstRun) {
-      this.startGameBtn.addEventListener("click", this.handleStartGame);
+      this.startGameBtn.addEventListener("click", this.handleFirstStartGame);
       this.switchView("intro");
     } else {
       if (this.currentView !== "game") {
@@ -253,6 +281,46 @@ export class GameEngine {
       this.run();
       this.shyguySprite.setTarget(this.targets.exit);
     }
+  }
+
+  async handleFirstStartGame() {
+    this.switchView("dialogue");
+    this.leftCharacterImg.src = "/assets/assets/wingman.jpeg";
+    this.rightCharacterImg.src = "/assets/assets/shyguy_headshot.jpeg";
+    this.hideContinueButton();
+
+    for (const introMessage of GameEngine.introMessages) {
+      const { message, character } = introMessage;
+      this.addChatMessage(this.dialogueChatContainer, message, character, false);
+      if (this.voiceEnabled) {
+        await this.elevenLabsClient.playAudioForCharacter(character, message);
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+
+    this.showNextButton();
+  }
+
+  showNextButton() {
+    if (this.dialogueNextButton) {
+      this.dialogueNextButton.style.display = "block";
+    }
+  }
+
+  hideNextButton() {
+    if (this.dialogueNextButton) {
+      this.dialogueNextButton.style.display = "none";
+    }
+  }
+
+  handleDialogueNext() {
+    this.clearChat(this.dialogueChatContainer);
+    this.leftCharacterImg.style.display = "none";
+    this.rightCharacterImg.style.display = "none";
+    this.hideNextButton();
+    this.showContinueButton();
+    this.handleStartGame();
   }
 
   async handleStartGame() {
@@ -602,18 +670,15 @@ export class GameEngine {
     // Hide loading indicator
     dialogueBox.classList.remove("loading");
 
-    // Update character images
-    const leftCharacterImg = document.getElementById("leftCharacterImg");
-    const rightCharacterImg = document.getElementById("rightCharacterImg");
-
-    if (leftCharacterImg && response.char2imgpath) {
-      leftCharacterImg.src = response.char2imgpath;
-      leftCharacterImg.style.display = "block";
+    // Update character images using class properties
+    if (this.leftCharacterImg && response.char2imgpath) {
+      this.leftCharacterImg.src = response.char2imgpath;
+      this.leftCharacterImg.style.display = "block";
     }
 
-    if (rightCharacterImg && response.char1imgpath) {
-      rightCharacterImg.src = response.char1imgpath;
-      rightCharacterImg.style.display = "block";
+    if (this.rightCharacterImg && response.char1imgpath) {
+      this.rightCharacterImg.src = response.char1imgpath;
+      this.rightCharacterImg.style.display = "block";
     }
 
     const conversation = response.conversation;
