@@ -853,7 +853,7 @@ export class GameEngine {
       }
 
       // TODO: save conversation history
-
+      this.shyguy.learnFromWingman(message);
       console.log("[ShyguyLLM]: Next action: ", action);
       this.resolveAction(action);
     });
