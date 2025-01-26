@@ -170,14 +170,16 @@ export class GameEngine {
       WINGMAN_SPEED
     );
 
+    this.jessicaSprite = new SpriteImage("/assets/assets/jessica.png", 64, 64);
+
     this.targets = {
       exit: new Target(EXIT_LABEL, this.wall.width, this.wall.height, this.wall.width, this.wall.height, "red", true),
       girl: new Target(
         GIRL_LABEL,
-        this.canvasWidth - this.wall.width - this.shyguySprite.width,
-        this.canvasHeight / 2 - this.wall.height / 2,
-        this.wall.width,
-        this.wall.height,
+        this.canvasWidth - this.wall.width - this.jessicaSprite.width,
+        (this.canvasHeight - this.wall.height - this.jessicaSprite.height) / 2,
+        this.jessicaSprite.width,
+        this.jessicaSprite.height,
         "pink",
         true
       ),
@@ -474,20 +476,22 @@ export class GameEngine {
   }
 
   checkTargetReached(sprite, target) {
-    // Calculate sprite center
-    const spriteCenterX = sprite.x + sprite.width / 2;
-    const spriteCenterY = sprite.y + sprite.height / 2;
+    // Check if sprite overlaps with target using AABB collision detection
+    const spriteLeft = sprite.x;
+    const spriteRight = sprite.x + sprite.width;
+    const spriteTop = sprite.y;
+    const spriteBottom = sprite.y + sprite.height;
 
-    const targetCenterX = target.x + target.width / 2;
-    const targetCenterY = target.y + target.height / 2;
+    const targetLeft = target.x;
+    const targetRight = target.x + target.width;
+    const targetTop = target.y;
+    const targetBottom = target.y + target.height;
 
-    // Calculate distance from sprite center to target
-    const dx = Math.abs(spriteCenterX - targetCenterX);
-    const dy = Math.abs(spriteCenterY - targetCenterY);
+    // Check for overlap on both x and y axes
+    const xOverlap = spriteRight >= targetLeft && spriteLeft <= targetRight;
+    const yOverlap = spriteBottom >= targetTop && spriteTop <= targetBottom;
 
-    // Check if target is within sprite boundaries
-    const isWithinBounds = dx <= sprite.width / 2 && dy <= sprite.height / 2;
-    return isWithinBounds;
+    return xOverlap && yOverlap;
   }
 
   updateGuidedSpriteDirection(sprite) {
@@ -625,6 +629,9 @@ export class GameEngine {
       }
     }
 
+    // Draw jessica
+    this.drawTargetSprite(this.jessicaSprite, this.targets.girl);
+
     // Draw shyguy
     this.ctx.drawImage(
       this.shyguySprite.image,
@@ -650,16 +657,10 @@ export class GameEngine {
       this.wingmanSprite.width,
       this.wingmanSprite.height
     );
+  }
 
-    if (IS_DEBUG) {
-      for (const target in this.targets) {
-        const { x, y, width, height, debugColor } = this.targets[target];
-        this.ctx.beginPath();
-        this.ctx.arc(x + width / 2, y + height / 2, 10, 0, 2 * Math.PI);
-        this.ctx.fillStyle = debugColor;
-        this.ctx.fill();
-      }
-    }
+  drawTargetSprite(sprite, target) {
+    this.ctx.drawImage(sprite.image, target.x, target.y, target.width, target.height);
   }
 
   switchView(viewName) {
