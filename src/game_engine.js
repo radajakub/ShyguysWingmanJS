@@ -563,6 +563,9 @@ export class GameEngine {
 
       // TODO: reenable the target so the player can visit it again
       if (!target.enabled) {
+        if (!isClose) {
+          target.enabled = true;
+        }
         continue;
       }
 
