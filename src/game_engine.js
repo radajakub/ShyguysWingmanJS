@@ -480,6 +480,9 @@ export class GameEngine {
     if (e.key in this.keys) {
       this.keys[e.key] = true;
       this.wingmanSprite.moving = true;
+    } else if (e.key === "Enter" && this.currentView === "game" && !e.shiftKey) {
+      e.preventDefault();
+      this.handleSendMessage();
     }
   }
 
@@ -880,6 +883,7 @@ export class GameEngine {
   }
 
   handlePlayAgain() {
+    this.clearChat(this.gameChatContainer);
     this.resetGame();
     this.switchView("game");
   }
