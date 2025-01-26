@@ -94,10 +94,15 @@ export class GameEngine {
 
     this.shouldContinue = true;
 
+    this.gameOver = false;
+    this.gameSuccessful = false;
+
     this.gameChatContainer = document.getElementById("chatMessages");
     this.messageInput = document.getElementById("messageInput");
     this.sendButton = document.getElementById("sendButton");
     this.microphoneButton = document.getElementById("micButton");
+    this.gameOverImage = document.getElementById("gameOverImage");
+    this.gameOverText = document.getElementById("gameOverText");
 
     this.dialogueChatContainer = document.getElementById("dialogueMessages");
     this.dialogueContinueButton = document.getElementById("dialogueContinueButton");
@@ -129,8 +134,10 @@ export class GameEngine {
     this.handleSendMessage = this.handleSendMessage.bind(this);
     this.handleMicrophone = this.handleMicrophone.bind(this);
     this.handleDialogueContinue = this.handleDialogueContinue.bind(this);
+    this.setGameOver = this.setGameOver.bind(this);
 
     this.pushEnabled = false;
+    this.voiceEnabled = !IS_DEBUG;
 
     // Debug controls
     this.initDebugControls();
@@ -210,19 +217,6 @@ export class GameEngine {
     this.isRecording = false;
   }
 
-  // async loadAssets() {
-  //   try {
-  //     await Promise.all([
-  //       this.wall.waitForLoad(),
-  //       this.floor.waitForLoad(),
-  //       this.shyguySprite.waitForLoad(),
-  //       this.wingmanSprite.waitForLoad(),
-  //     ]);
-  //   } catch (error) {
-  //     console.error("Failed to load assets:", error);
-  //   }
-  // }
-
   init() {
     this.canvas.width = this.canvasWidth;
     this.canvas.height = this.canvasHeight;
@@ -242,9 +236,14 @@ export class GameEngine {
     this.shyguySprite.setTarget(this.targets.exit);
   }
 
-  endGame() {
-    this.shouldContinue = false;
-    this.switchView("gameOver");
+  setResetCallback(func) {
+    this.resetCallback = func;
+  }
+
+  resetGame() {
+    if (this.resetCallback) {
+      this.resetCallback();
+    }
   }
 
   initBackgroundGridMap() {
@@ -545,8 +544,10 @@ export class GameEngine {
         this.stopShyguyAnimation(target);
 
         if (target.label === EXIT_LABEL) {
-          this.endGame();
-          // END THE GAME
+          this.gameOver = true;
+          this.gameSuccessful = false;
+          this.setGameOver(true);
+          this.switchView("gameOver");
         } else {
           await this.handleDialogueWithStoryEngine(target.label);
         }
@@ -565,27 +566,28 @@ export class GameEngine {
     // Update character images
     const leftCharacterImg = document.getElementById("leftCharacterImg");
     const rightCharacterImg = document.getElementById("rightCharacterImg");
-    
+
     if (leftCharacterImg && response.char1imgpath) {
-        leftCharacterImg.src = response.char1imgpath;
-        leftCharacterImg.style.display = "block";
+      leftCharacterImg.src = response.char1imgpath;
+      leftCharacterImg.style.display = "block";
     }
-    
+
     if (rightCharacterImg && response.char2imgpath) {
-        rightCharacterImg.src = response.char2imgpath;
-        rightCharacterImg.style.display = "block";
+      rightCharacterImg.src = response.char2imgpath;
+      rightCharacterImg.style.display = "block";
     }
 
     const conversation = response.conversation;
+
+    // TODO: set the images if they are available
 
     for (const message of conversation) {
       const { role, content } = message;
       const label = nameToLabel(role);
       this.addChatMessage(this.dialogueChatContainer, content, label, true);
 
-      // read the text by llm
-
-      if (!IS_DEBUG) {
+      // Only play audio if voice is enabled
+      if (this.voiceEnabled) {
         try {
           await this.elevenLabsClient.playAudioForCharacter(label, content);
         } catch (error) {
@@ -593,6 +595,9 @@ export class GameEngine {
         }
       }
     }
+
+    this.gameOver = response.gameOver;
+    this.gameSuccessful = response.gameSuccesful;
 
     this.showContinueButton();
   }
@@ -690,8 +695,6 @@ export class GameEngine {
   }
 
   initDebugControls() {
-    const switchToGameBtn = document.getElementById("switchToGameBtn");
-    const switchToDialogueBtn = document.getElementById("switchToDialogueBtn");
     const targetDoorBtn = document.getElementById("targetDoorBtn");
     const targetGirlBtn = document.getElementById("targetGirlBtn");
     const targetBarBtn = document.getElementById("targetBarBtn");
@@ -700,9 +703,8 @@ export class GameEngine {
     const stopNavBtn = document.getElementById("stopNavBtn");
     const togglePushBtn = document.getElementById("togglePushBtn");
     const speedBoostBtn = document.getElementById("speedBoostBtn");
+    const toggleVoiceBtn = document.getElementById("toggleVoiceBtn");
 
-    switchToGameBtn.addEventListener("click", () => this.showGameView());
-    switchToDialogueBtn.addEventListener("click", () => this.showDialogueView());
     targetDoorBtn.addEventListener("click", () => this.setNewTarget(this.targets.exit));
     targetGirlBtn.addEventListener("click", () => this.setNewTarget(this.targets.girl));
     targetBarBtn.addEventListener("click", () => this.setNewTarget(this.targets.bar));
@@ -729,6 +731,12 @@ export class GameEngine {
         this.shyguySprite.setSpeed(SHYGUY_SPEED);
         speedBoostBtn.textContent = "Speed Boost";
       }
+    });
+
+    // Add voice toggle handler
+    toggleVoiceBtn.addEventListener("click", () => {
+      this.voiceEnabled = !this.voiceEnabled;
+      toggleVoiceBtn.textContent = this.voiceEnabled ? "Disable Voice" : "Enable Voice";
     });
   }
 
@@ -799,26 +807,25 @@ export class GameEngine {
       const dialogue = response.dialogue;
       const action = response.action;
 
-      // TODO: add the messages to the context of the prompts
-
-      // Add message to the chat view
       this.addChatMessage(this.gameChatContainer, dialogue, SHYGUY_LABEL, false);
 
-      // read the message in an asynchronous way
-      if (!IS_DEBUG) {
+      // Only play audio if voice is enabled
+      if (this.voiceEnabled) {
         this.disableGameInput();
         await this.elevenLabsClient.playAudioForCharacter(SHYGUY_LABEL, dialogue);
         this.enableGameInput();
       }
 
-      console.log("[ShyguyLLM]: Next action: ", action);
+      // TODO: save conversation history
 
+      console.log("[ShyguyLLM]: Next action: ", action);
       this.resolveAction(action);
     });
   }
 
   async handleSendMessage() {
     const message = this.messageInput.value.trim();
+    if (message.length === 0) return;
     this.sendMessageToShyguy(message);
   }
 
@@ -833,29 +840,8 @@ export class GameEngine {
   }
 
   handlePlayAgain() {
-    // Reset game state
-    this.init();
-    // Switch back to game view
+    this.resetGame();
     this.switchView("game");
-  }
-
-  resetGame() {
-    // Reset player positions
-    const cx = this.canvasWidth / 2;
-    const cy = this.canvasHeight / 2;
-    this.shyguySprite.x = cx;
-    this.shyguySprite.y = cy;
-    this.wingmanSprite.x = this.wall.width;
-    this.wingmanSprite.y = this.canvasHeight - 2 * this.wall.width;
-
-    // Reset targets
-    Object.values(this.targets).forEach((target) => {
-      target.enabled = true;
-    });
-
-    // Reset other game state
-    this.shouldContinue = true;
-    this.shyguySprite.setTarget(this.targets.exit);
   }
 
   async handleMicrophone() {
@@ -885,24 +871,50 @@ export class GameEngine {
     this.dialogueContinueButton.style.display = "none";
   }
 
+  setGameOver(fromExit) {
+    // TODO: set the image and text
+    if (fromExit) {
+      this.gameOverText.textContent = "You lost! The Shyguy ran away!";
+      return;
+    }
+
+    this.gameOverText.textContent = this.gameSuccessful
+      ? "You won! The Shyguy got a date!"
+      : "You lost! The Shyguy got rejected!";
+  }
+
   handleDialogueContinue() {
     this.clearChat(this.dialogueChatContainer);
-    
+
     // Hide character images
     const leftCharacterImg = document.getElementById("leftCharacterImg");
     const rightCharacterImg = document.getElementById("rightCharacterImg");
-    
+
     if (leftCharacterImg) {
-        leftCharacterImg.style.display = "none";
+      leftCharacterImg.style.display = "none";
     }
     if (rightCharacterImg) {
-        rightCharacterImg.style.display = "none";
+      rightCharacterImg.style.display = "none";
+    }
+
+    // decide if game is over
+    if (this.gameOver) {
+      this.setGameOver(false);
+      this.switchView("gameOver");
+      return;
     }
 
     this.switchView("game");
     this.shyguyLLM.getShyGuyResponse("").then((response) => {
       console.log("[ShyguyLLM]: Next action: ", response);
       const next_action = response.action;
+
+      console.log("response after dialogue", response);
+
+      // Enable push if shyguy has had at least one beer
+      if (this.shyguy.num_beers > 0 && !this.pushEnabled) {
+        this.enablePush();
+      }
 
       this.resolveAction(next_action);
     });

@@ -20,6 +20,10 @@ export class Shyguy {
         this.lessons_learned += lesson + "\n";
     }
 
+    appendConversationHistory(conversation_history) {
+        this.conversation_history += conversation_history + "\n";
+    }
+
     async learnLesson(entityName){
         const summaryLLM = new LLM();
         const summary = await summaryLLM.getChatCompletion(
