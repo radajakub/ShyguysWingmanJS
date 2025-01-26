@@ -87,7 +87,7 @@ export class GameEngine {
       character: SHYGUY_LABEL,
     },
     {
-      message: "Okay, just follow my advice!",
+      message: "Okay, just follow my advice! I'll push you around if needed.",
       character: WINGMAN_LABEL,
     },
   ];
