@@ -8,8 +8,8 @@ export class ElevenLabsClient {
 
   static characterToVoiceIdMapping = {
     [SHYGUY_LABEL]: "bGNROVfU5WbK6F0AyHII",
-    [SISTER_LABEL]: "zQPM9vJjjzGxbs457rQj",
-    [GIRL_LABEL]: "zQPM9vJjjzGxbs457rQj",
+    [SISTER_LABEL]: "XA4HJz0cEOIlrQq0BGwu",
+    [GIRL_LABEL]: "XA4HJz0cEOIlrQq0BGwu",
     [BAR_LABEL]: "XA2bIQ92TabjGbpO2xRr",
     [DJ_LABEL]: "T0pkYhIZ7UMOc26gqqeX",
     [WINGMAN_LABEL]: "XA2bIQ92TabjGbpO2xRr",
