@@ -32,6 +32,8 @@ export class Game {
   async run() {
     this.gameEngine.init(this.firstRun);
     this.gameEngine.setResetCallback(this.reset);
+    this.gameEngine.playBackgroundMusic();
+    this.gameEngine.lowerMusicVolume();
   }
 
   reset() {

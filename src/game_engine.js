@@ -250,6 +250,15 @@ export class GameEngine {
     this.introView = document.getElementById("introView");
     this.startGameBtn = document.getElementById("startGameBtn");
 
+    this.backgroundMusic = new Audio('assets/assets/tiny-steps-danijel-zambo-main-version-1433-01-48.mp3');
+    this.backgroundMusic.loop = true;
+    
+    this.gameOverMusic = new Audio('/assets/assets/game-over-8bit-music-danijel-zambo-1-00-16.mp3');
+    this.gameOverMusic.loop = false;
+    
+    this.victoryMusic = new Audio('/assets/assets/moonlit-whispers-theo-gerard-main-version-35960-02-34.mp3');
+    this.victoryMusic.loop = false;
+
     // Move character images to class state
     this.leftCharacterImg = document.getElementById("leftCharacterImg");
     this.rightCharacterImg = document.getElementById("rightCharacterImg");
@@ -337,6 +346,7 @@ export class GameEngine {
 
   async handleStartGame() {
     this.switchView("game");
+    this.playBackgroundMusic();
     this.run();
     this.shyguySprite.setTarget(this.targets.exit);
   }
@@ -705,25 +715,25 @@ export class GameEngine {
       // Only play audio if voice is enabled
       if (this.voiceEnabled) {
         try {
+          this.lowerMusicVolumeALot();
           await this.elevenLabsClient.playAudioForCharacter(label, content);
+          this.restoreMusicVolume();
         } catch (error) {
           console.error("Error playing audio:", label);
         }
       }
     }
 
-    if (!response.gameOver && !response.gameSuccessful) {
-      this.gameOver = false;
-    } else if (response.gameOver && !response.gameSuccessful) {
-      this.gameOver = true;
-      this.gameSuccessful = false;
-    } else if (!response.gameOver && response.gameSuccessful) {
+    if (response.gameSuccesful) {
       this.gameOver = true;
       this.gameSuccessful = true;
+    } else if (response.gameOver) {
+      this.gameOver = true;
+      this.gameSuccessful = false;
+    } else {
+      this.gameOver = false;
+      this.gameSuccessful = false;
     }
-
-    this.gameOver = response.gameOver;
-    this.gameSuccessful = response.gameSuccesful;
 
     this.showContinueButton();
   }
@@ -943,8 +953,10 @@ export class GameEngine {
       // Only play audio if voice is enabled
       if (this.voiceEnabled) {
         this.disableGameInput();
+        this.lowerMusicVolumeALot();
         await this.elevenLabsClient.playAudioForCharacter(SHYGUY_LABEL, dialogue);
         this.enableGameInput();
+        this.restoreMusicVolume();
       }
 
       // TODO: save conversation history
@@ -983,6 +995,8 @@ export class GameEngine {
       this.microphoneButton.classList.add("recording");
       this.microphoneButton.innerHTML = '<i class="fas fa-stop"></i>';
 
+      // Lower music volume while recording
+      this.lowerMusicVolumeALot();
       await this.speechToTextClient.startRecording();
     } else {
       // Stop recording
@@ -991,6 +1005,8 @@ export class GameEngine {
       this.microphoneButton.innerHTML = '<i class="fas fa-microphone"></i>';
 
       const result = await this.speechToTextClient.stopRecording();
+      // Restore music volume after recording
+      this.restoreMusicVolume();
       this.sendMessageToShyguy(result.text);
     }
   }
@@ -1004,10 +1020,14 @@ export class GameEngine {
   }
 
   setGameOver(fromExit) {
+    this.stopBackgroundMusic();
+    
     if (this.gameSuccessful) {
       this.gameOverImage.src = "assets/assets/victory.png";
+      this.playVictoryMusic();
     } else {
       this.gameOverImage.src = "assets/assets/game-over.png";
+      this.playGameOverMusic();
     }
 
     if (fromExit) {
@@ -1064,5 +1084,76 @@ export class GameEngine {
     this.sendButton.removeAttribute("disabled");
     this.microphoneButton.removeAttribute("disabled");
     this.messageInput.removeAttribute("disabled");
+  }
+
+  playBackgroundMusic() {
+    this.backgroundMusic.play().catch(error => {
+      console.error("Error playing background music:", error);
+    });
+  }
+
+  stopBackgroundMusic() {
+    this.backgroundMusic.pause();
+    this.backgroundMusic.currentTime = 0;
+  }
+
+  playGameOverMusic() {
+    this.gameOverMusic.play().catch(error => {
+      console.error("Error playing game over music:", error);
+    });
+  }
+
+  playVictoryMusic() {
+    this.victoryMusic.play().catch(error => {
+      console.error("Error playing victory music:", error);
+    });
+  }
+
+  stopAllMusic() {
+    this.stopBackgroundMusic();
+    this.gameOverMusic.pause();
+    this.gameOverMusic.currentTime = 0;
+    this.victoryMusic.pause();
+    this.victoryMusic.currentTime = 0;
+  }
+
+  lowerMusicVolume() {
+    // Store original volumes if not already stored
+    if (!this.originalVolumes) {
+        this.originalVolumes = {
+            background: this.backgroundMusic.volume,
+            gameOver: this.gameOverMusic.volume,
+            victory: this.victoryMusic.volume
+        };
+    }
+    
+    // Lower all music volumes to 20% of their original values
+    this.backgroundMusic.volume = this.originalVolumes.background * 0.2;
+    this.gameOverMusic.volume = this.originalVolumes.gameOver * 0.2;
+    this.victoryMusic.volume = this.originalVolumes.victory * 0.2;
+  }
+  lowerMusicVolumeALot() {
+    // Store original volumes if not already stored
+    if (!this.originalVolumes) {
+        this.originalVolumes = {
+            background: this.backgroundMusic.volume,
+            gameOver: this.gameOverMusic.volume,
+            victory: this.victoryMusic.volume
+        };
+    }
+    
+    // Lower all music volumes to 20% of their original values
+    this.backgroundMusic.volume = this.originalVolumes.background * 0.01;
+    this.gameOverMusic.volume = this.originalVolumes.gameOver * 0.01;
+    this.victoryMusic.volume = this.originalVolumes.victory * 0.01;
+  }
+
+  restoreMusicVolume() {
+    // Restore original volumes if they exist
+    if (this.originalVolumes) {
+      this.backgroundMusic.volume = this.originalVolumes.background * 0.2;
+      this.gameOverMusic.volume = this.originalVolumes.gameOver * 0.2;
+      this.victoryMusic.volume = this.originalVolumes.victory * 0.2;
+    }
   }
 }
