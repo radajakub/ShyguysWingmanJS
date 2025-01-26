@@ -1,4 +1,4 @@
-import { LLM } from './llm.js';
+import { LLM } from "./llm.js";
 export class ShyGuyLLM {
     constructor(shyguy) {
 
@@ -41,37 +41,39 @@ export class ShyGuyLLM {
         return this.baseSystemPrompt + addToPrompt;
     }
 
-    async getShyGuyResponse(situation) {
-        try {
-            const availableActions = this.shyguy.getAvailableActions();
-            const actionsPrompt = `\nYour currently available actions are: ${Object.keys(availableActions)
-                .map(action => `\n- ${action}: ${availableActions[action].description}`)
-                .join('')}`;
-            
-            const fullPrompt = this.getSystemPrompt() + actionsPrompt;
+  async getShyGuyResponse(situation) {
+    try {
+      const availableActions = this.shyguy.getAvailableActions();
+      const actionsPrompt = `\nYour currently available actions are: ${Object.keys(availableActions)
+        .map((action) => `\n- ${action}: ${availableActions[action].description}`)
+        .join("")}`;
 
-            const response = await this.llm.getJsonCompletion(
-                fullPrompt,
-                situation
-            );
+      console.log("actionsPrompt", actionsPrompt);
 
-            // Validate response format
-            if (!response.action || !response.dialogue) {
-                throw new Error('Invalid response format from LLM');
-            }
+      const fullPrompt = this.getSystemPrompt() + actionsPrompt;
 
-            return {
-                action: response.action,
-                dialogue: response.dialogue
-            };
-        } catch (error) {
-            console.error('ShyGuy Response Error:', error);
-            // Return a fallback response in case of error
-            return {
-                action: "go_home",
-                dialogue: "Umm... I... uh..."
-            };
-        }
+      console.log(fullPrompt);
+
+      const response = await this.llm.getJsonCompletion(fullPrompt, situation);
+
+      console.log("response", response);
+
+      // Validate response format
+      if (!response.action || !response.dialogue) {
+        throw new Error("Invalid response format from LLM");
+      }
+
+      return {
+        action: response.action,
+        dialogue: response.dialogue,
+      };
+    } catch (error) {
+      console.error("ShyGuy Response Error:", error);
+      // Return a fallback response in case of error
+      return {
+        action: "go_home",
+        dialogue: "Umm... I... uh...",
+      };
     }
+  }
 }
-

@@ -1,33 +1,13 @@
+import { BAR_LABEL, DJ_LABEL, EXIT_LABEL, GIRL_LABEL, SISTER_LABEL, WINGMAN_LABEL, SHYGUY_LABEL } from "./constants";
+import { nameToLabel } from "./story_engine.js";
+
 const WINGMAN_SPEED = 5;
-const SHYGUY_SPEED = 0.5;
+const SHYGUY_SPEED = 0.1;
 
 const IS_DEBUG = true;
 
-// class CustomImage {
-//   constructor(imageSrc) {
-//     this.image = new Image();
-
-//     this.loadPromise = new Promise((resolve, reject) => {
-//       this.image.onload = () => {
-//         resolve(this);
-//       };
-//       this.image.onerror = () => {
-//         reject(new Error(`Failed to load image: ${imageSrc}`));
-//       };
-//     });
-
-//     this.image.src = imageSrc;
-//   }
-
-//   async waitForLoad() {
-//     return this.loadPromise;
-//   }
-// }
-
 class SpriteEntity {
   constructor(x0, y0, imageSrc, speed = 0, width = 32, height = 32, frameRate = 8, frameCount = 4) {
-    // super(imageSrc);
-
     this.x = x0;
     this.y = y0;
     this.width = width;
@@ -92,11 +72,12 @@ class Target {
 }
 
 export class GameEngine {
-  constructor(shyguy, shyguyLLM, storyEngine, speechToTextClient) {
+  constructor(shyguy, shyguyLLM, storyEngine, speechToTextClient, elevenLabsClient) {
     this.shyguy = shyguy;
     this.shyguyLLM = shyguyLLM;
     this.storyEngine = storyEngine;
     this.speechToTextClient = speechToTextClient;
+    this.elevenLabsClient = elevenLabsClient;
 
     this.canvasWidth = 960;
     this.canvasHeight = 640;
@@ -118,8 +99,8 @@ export class GameEngine {
     this.sendButton = document.getElementById("sendButton");
     this.microphoneButton = document.getElementById("micButton");
 
-    this.handleSendMessage = this.handleSendMessage.bind(this);
-    this.handleMicrophone = this.handleMicrophone.bind(this);
+    this.dialogueChatContainer = document.getElementById("dialogueMessages");
+    this.dialogueContinueButton = document.getElementById("dialogueContinueButton");
 
     this.gameFrame = 0;
     this.keys = {
@@ -145,6 +126,9 @@ export class GameEngine {
     this.stopShyguyAnimation = this.stopShyguyAnimation.bind(this);
     this.handlePlayAgain = this.handlePlayAgain.bind(this);
     this.handleMicrophone = this.handleMicrophone.bind(this);
+    this.handleSendMessage = this.handleSendMessage.bind(this);
+    this.handleMicrophone = this.handleMicrophone.bind(this);
+    this.handleDialogueContinue = this.handleDialogueContinue.bind(this);
 
     this.pushEnabled = false;
 
@@ -180,9 +164,9 @@ export class GameEngine {
     );
 
     this.targets = {
-      exit: new Target("exit", this.wall.width, this.wall.height, this.wall.width, this.wall.height, "red", true),
+      exit: new Target(EXIT_LABEL, this.wall.width, this.wall.height, this.wall.width, this.wall.height, "red", true),
       girl: new Target(
-        "girl",
+        GIRL_LABEL,
         this.canvasWidth - this.wall.width - this.shyguySprite.width,
         this.canvasHeight / 2 - this.wall.height / 2,
         this.wall.width,
@@ -191,7 +175,7 @@ export class GameEngine {
         true
       ),
       bar: new Target(
-        "bar",
+        BAR_LABEL,
         this.canvasWidth / 2 - this.wall.width / 2,
         this.canvasHeight - this.wall.height - this.shyguySprite.width,
         this.wall.width,
@@ -200,7 +184,7 @@ export class GameEngine {
         true
       ),
       dj: new Target(
-        "dj",
+        DJ_LABEL,
         this.wall.width,
         this.canvasHeight / 2 - this.wall.height / 2,
         this.wall.width,
@@ -209,7 +193,7 @@ export class GameEngine {
         true
       ),
       sister: new Target(
-        "sister",
+        SISTER_LABEL,
         this.canvasWidth - this.wall.width - this.shyguySprite.width,
         this.wall.height,
         this.wall.width,
@@ -222,13 +206,6 @@ export class GameEngine {
     // Add game over view
     this.gameOverView = document.getElementById("gameOverView");
     this.playAgainBtn = document.getElementById("playAgainBtn");
-
-    // Bind new method
-
-    // Initialize play again button
-    this.playAgainBtn.addEventListener("click", this.handlePlayAgain);
-
-    this.microphoneButton.addEventListener("click", this.handleMicrophone);
 
     this.isRecording = false;
   }
@@ -257,7 +234,9 @@ export class GameEngine {
     this.switchView("game");
 
     this.sendButton.addEventListener("click", this.handleSendMessage);
-    // TODO: bind microphone to the input api
+    this.dialogueContinueButton.addEventListener("click", this.handleDialogueContinue);
+    this.playAgainBtn.addEventListener("click", this.handlePlayAgain);
+    this.microphoneButton.addEventListener("click", this.handleMicrophone);
 
     this.run();
     this.shyguySprite.setTarget(this.targets.exit);
@@ -490,6 +469,9 @@ export class GameEngine {
       this.shyguySprite.setTarget(target);
       this.updateGuidedSpriteDirection(this.shyguySprite);
     }
+    if (!target) {
+      this.shyguySprite.setTarget(null);
+    }
   }
 
   checkTargetReached(sprite, target) {
@@ -532,7 +514,7 @@ export class GameEngine {
     }
   }
 
-  update() {
+  async update() {
     this.gameFrame++;
 
     // Update Shyguy position
@@ -558,21 +540,53 @@ export class GameEngine {
       }
 
       if (isClose) {
+        // pause the game
         target.enabled = false;
         this.stopShyguyAnimation(target);
-        if (target.label === "exit") {
+
+        if (target.label === EXIT_LABEL) {
           this.endGame();
           // END THE GAME
         } else {
-          this.storyEngine.onEncounter(target.label);
+          await this.handleDialogueWithStoryEngine(target.label);
         }
         break;
       }
     }
   }
 
+  async handleDialogueWithStoryEngine(label) {
+    this.switchView("dialogue");
+    this.hideContinueButton();
+    const response = await this.storyEngine.onEncounter(label);
+
+    console.log("[StoryEngine]: onEncounter", response);
+
+    const leftImage = response.char1imgpath;
+    const rightImage = response.char2imagepath;
+    const conversation = response.conversation;
+
+    for (const message of conversation) {
+      const { role, content } = message;
+      const label = nameToLabel(role);
+      this.addChatMessage(this.dialogueChatContainer, content, label, true);
+
+      // read the text by llm
+
+      if (!IS_DEBUG) {
+        try {
+          await this.elevenLabsClient.playAudioForCharacter(label, content);
+        } catch (error) {
+          console.error("Error playing audio:", label);
+        }
+      }
+    }
+
+    this.showContinueButton();
+  }
+
   stopShyguyAnimation(target) {
-    this.shyguySprite.ving = false;
+    this.shyguySprite.moving = false;
     this.shyguySprite.frameX = 0;
     this.shyguySprite.target = null;
   }
@@ -663,14 +677,6 @@ export class GameEngine {
     this.pushEnabled = false;
   }
 
-  showGameView() {
-    this.switchView("game");
-  }
-
-  showDialogueView() {
-    this.switchView("dialogue");
-  }
-
   initDebugControls() {
     const switchToGameBtn = document.getElementById("switchToGameBtn");
     const switchToDialogueBtn = document.getElementById("switchToDialogueBtn");
@@ -681,6 +687,7 @@ export class GameEngine {
     const targetSisterBtn = document.getElementById("targetSisterBtn");
     const stopNavBtn = document.getElementById("stopNavBtn");
     const togglePushBtn = document.getElementById("togglePushBtn");
+    const speedBoostBtn = document.getElementById("speedBoostBtn");
 
     switchToGameBtn.addEventListener("click", () => this.showGameView());
     switchToDialogueBtn.addEventListener("click", () => this.showDialogueView());
@@ -700,6 +707,17 @@ export class GameEngine {
       }
       togglePushBtn.textContent = this.pushEnabled ? "Disable Push" : "Enable Push";
     });
+
+    // Add speed boost toggle
+    speedBoostBtn.addEventListener("click", () => {
+      if (this.shyguySprite.speed === SHYGUY_SPEED) {
+        this.shyguySprite.setSpeed(10);
+        speedBoostBtn.textContent = "Normal Speed";
+      } else {
+        this.shyguySprite.setSpeed(SHYGUY_SPEED);
+        speedBoostBtn.textContent = "Speed Boost";
+      }
+    });
   }
 
   // Update status text
@@ -716,15 +734,13 @@ export class GameEngine {
     }
   }
 
-  initMessageHandlers() {
-    // Add click handler for send button
-  }
-
-  addChatMessage(container, message, isShyguy = false) {
+  addChatMessage(container, message, character, shyguyIsMain) {
     if (!container) return;
 
+    const isMain = shyguyIsMain ? character === SHYGUY_LABEL : character !== SHYGUY_LABEL;
+
     const messageDiv = document.createElement("div");
-    messageDiv.className = `chat-message ${isShyguy ? "shyguy" : "wingman"}`;
+    messageDiv.className = `chat-message ${isMain ? "right-user" : "left-user"}`;
 
     const bubble = document.createElement("div");
     bubble.className = "message-bubble";
@@ -737,41 +753,52 @@ export class GameEngine {
     container.scrollTop = container.scrollHeight;
   }
 
+  resolveAction(action) {
+    // TODO: resolve the action
+    switch (action) {
+      case "go_bar":
+        this.setNewTarget(this.targets.bar);
+        break;
+      case "go_dj":
+        this.setNewTarget(this.targets.dj);
+        break;
+      case "go_sister":
+        this.setNewTarget(this.targets.sister);
+        break;
+      case "go_girl":
+        this.setNewTarget(this.targets.girl);
+        break;
+      case "go_home":
+        this.setNewTarget(this.targets.exit);
+        break;
+      default:
+        break;
+    }
+  }
+
   async sendMessageToShyguy(message) {
-    this.addChatMessage(this.gameChatContainer, message, false);
+    this.addChatMessage(this.gameChatContainer, message, WINGMAN_LABEL, false);
     this.messageInput.value = "";
 
-    this.shyguyLLM.getShyGuyResponse(message).then((response) => {
+    this.shyguyLLM.getShyGuyResponse(message).then(async (response) => {
       const dialogue = response.dialogue;
       const action = response.action;
 
       // TODO: add the messages to the context of the prompts
 
       // Add message to the chat view
-      this.addChatMessage(this.gameChatContainer, dialogue, true);
+      this.addChatMessage(this.gameChatContainer, dialogue, SHYGUY_LABEL, false);
+
+      // read the message in an asynchronous way
+      if (!IS_DEBUG) {
+        this.disableGameInput();
+        await this.elevenLabsClient.playAudioForCharacter(SHYGUY_LABEL, dialogue);
+        this.enableGameInput();
+      }
 
       console.log("[ShyguyLLM]: Next action: ", action);
 
-      // TODO: resolve the action
-      switch (action) {
-        case "go_bar":
-          this.setNewTarget(this.targets.bar);
-          break;
-        case "go_dj":
-          this.setNewTarget(this.targets.dj);
-          break;
-        case "go_sister":
-          this.setNewTarget(this.targets.sister);
-          break;
-        case "go_girl":
-          this.setNewTarget(this.targets.girl);
-          break;
-        case "go_home":
-          this.setNewTarget(this.targets.exit);
-          break;
-        default:
-          break;
-      }
+      this.resolveAction(action);
     });
   }
 
@@ -783,7 +810,7 @@ export class GameEngine {
   async run() {
     // wait for 16ms
     await new Promise((resolve) => setTimeout(resolve, 16));
-    this.update();
+    await this.update();
     this.draw();
     if (this.shouldContinue) {
       requestAnimationFrame(this.run);
@@ -833,5 +860,37 @@ export class GameEngine {
       const result = await this.speechToTextClient.stopRecording();
       this.sendMessageToShyguy(result.text);
     }
+  }
+
+  showContinueButton() {
+    this.dialogueContinueButton.style.display = "block";
+  }
+
+  hideContinueButton() {
+    this.dialogueContinueButton.style.display = "none";
+  }
+
+  handleDialogueContinue() {
+    this.clearChat(this.dialogueChatContainer);
+    // TODO: clear images
+    this.switchView("game");
+    this.shyguyLLM.getShyGuyResponse("").then((response) => {
+      console.log("[ShyguyLLM]: Next action: ", response);
+      const next_action = response.action;
+
+      this.resolveAction(next_action);
+    });
+  }
+
+  disableGameInput() {
+    this.sendButton.setAttribute("disabled", "");
+    this.microphoneButton.setAttribute("disabled", "");
+    this.messageInput.setAttribute("disabled", "");
+  }
+
+  enableGameInput() {
+    this.sendButton.removeAttribute("disabled");
+    this.microphoneButton.removeAttribute("disabled");
+    this.messageInput.removeAttribute("disabled");
   }
 }
