@@ -589,7 +589,15 @@ export class GameEngine {
   async handleDialogueWithStoryEngine(label) {
     this.switchView("dialogue");
     this.hideContinueButton();
+
+    // Show loading indicator
+    const dialogueBox = document.querySelector(".dialogue-box");
+    dialogueBox.classList.add("loading");
+
     const response = await this.storyEngine.onEncounter(label);
+
+    // Hide loading indicator
+    dialogueBox.classList.remove("loading");
 
     // Update character images
     const leftCharacterImg = document.getElementById("leftCharacterImg");
