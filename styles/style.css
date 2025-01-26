@@ -326,15 +326,15 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url("/assets/game-over.gif"); /* Add your game over image/gif here */
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  object-fit: contain;
   opacity: 0.8;
 }
 
 .game-over-controls {
-  position: relative;
+  position: absolute;
+  bottom: 300px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1;
 }
 
@@ -402,6 +402,7 @@ body {
   text-align: center;
   text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
   margin-bottom: 40px;
+  margin-top: -200px;
   animation: pixelate 0.5s steps(5) forwards;
 }
 
