@@ -79,13 +79,26 @@ body {
   transition: background-color 0.2s;
 }
 
+.send-button:disabled,
+.mic-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.send-button:disabled:hover,
+.mic-button:disabled:hover {
+  background-color: #cccccc;
+  transform: none;
+}
+
 .send-button {
   background-color: #007bff;
   color: white;
   flex: 1;
 }
 
-.send-button:hover {
+.send-button:hover:not(:disabled) {
   background-color: #0056b3;
 }
 
@@ -97,7 +110,7 @@ body {
   transition: background-color 0.3s, transform 0.2s;
 }
 
-.mic-button:hover {
+.mic-button:hover:not(:disabled) {
   background-color: #5a6268;
 }
 
@@ -217,11 +230,11 @@ body {
   animation: fadeIn 0.3s ease-in;
 }
 
-.chat-message.shyguy {
+.chat-message.left-user {
   justify-content: flex-start;
 }
 
-.chat-message.wingman {
+.chat-message.right-user {
   justify-content: flex-end;
 }
 
@@ -233,13 +246,13 @@ body {
   line-height: 1.4;
 }
 
-.shyguy .message-bubble {
+.left-user .message-bubble {
   background-color: #e9ecef;
   color: #000;
   border-bottom-left-radius: 5px;
 }
 
-.wingman .message-bubble {
+.right-user .message-bubble {
   background-color: #007bff;
   color: white;
   border-bottom-right-radius: 5px;
@@ -318,5 +331,35 @@ body {
 }
 
 .play-again-button:active {
+  transform: translateY(0);
+}
+
+/* Dialogue Continue Button Styles */
+.dialogue-controls {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.continue-button {
+  padding: 12px 30px;
+  font-size: 18px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.continue-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.continue-button:active {
   transform: translateY(0);
 }

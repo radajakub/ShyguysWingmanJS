@@ -1,0 +1,2 @@
+- [ ] fix the collision detection at the start of the game (walls)
+- [ ] Fix reset of the game after new game
