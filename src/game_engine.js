@@ -724,18 +724,16 @@ export class GameEngine {
       }
     }
 
-    if (!response.gameOver && !response.gameSuccessful) {
-      this.gameOver = false;
-    } else if (response.gameOver && !response.gameSuccessful) {
-      this.gameOver = true;
-      this.gameSuccessful = false;
-    } else if (!response.gameOver && response.gameSuccessful) {
+    if (response.gameSuccesful) {
       this.gameOver = true;
       this.gameSuccessful = true;
+    } else if (response.gameOver) {
+      this.gameOver = true;
+      this.gameSuccessful = false;
+    } else {
+      this.gameOver = false;
+      this.gameSuccessful = false;
     }
-
-    this.gameOver = response.gameOver;
-    this.gameSuccessful = response.gameSuccesful;
 
     this.showContinueButton();
   }
