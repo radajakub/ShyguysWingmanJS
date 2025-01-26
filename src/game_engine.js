@@ -7,7 +7,7 @@ const SHYGUY_SPEED = 0.1;
 const IS_DEBUG = true;
 
 class SpriteEntity {
-  constructor(x0, y0, imageSrc, speed = 0, width = 32, height = 32, frameRate = 8, frameCount = 4) {
+  constructor(x0, y0, imageSrc, speed = 0, width = 24, height = 64, frameRate = 8, frameCount = 1) {
     this.x = x0;
     this.y = y0;
     this.width = width;
@@ -23,7 +23,7 @@ class SpriteEntity {
 
     // frame index in the sprite sheet
     this.frameX = 0;
-    this.frameY = 0;
+    this.frameY = 0; // 0 for right, 1 for left
   }
 
   stop() {
@@ -40,7 +40,7 @@ class SpriteEntity {
 }
 
 class GuidedSpriteEntity extends SpriteEntity {
-  constructor(x0, y0, imageSrc, speed = 0, width = 32, height = 32, frameRate = 8, frameCount = 4) {
+  constructor(x0, y0, imageSrc, speed = 0, width = 24, height = 64, frameRate = 8, frameCount = 1) {
     super(x0, y0, imageSrc, speed, width, height, frameRate, frameCount);
     this.target = null;
   }
@@ -165,11 +165,11 @@ export class GameEngine {
     // initialize players
     const cx = this.canvasWidth / 2;
     const cy = this.canvasHeight / 2;
-    this.shyguySprite = new GuidedSpriteEntity(cx, cy, "/assets/assets/shyguy.png", SHYGUY_SPEED);
+    this.shyguySprite = new GuidedSpriteEntity(cx, cy, "/assets/assets/shyguy_sprite.png", SHYGUY_SPEED);
     this.wingmanSprite = new SpriteEntity(
       this.wall.width,
-      this.canvasHeight - 2 * this.wall.width,
-      "/assets/assets/player.png",
+      this.canvasHeight - this.wall.height - 64,
+      "/assets/assets/wingman_sprite.png",
       WINGMAN_SPEED
     );
 
@@ -289,11 +289,14 @@ export class GameEngine {
   checkWallCollision(sprite, newX, newY) {
     const x = newX;
     const y = newY;
-    const gridX = Math.floor(x / sprite.width);
-    const gridY = Math.floor(y / sprite.height);
+    // For a sprite twice as big as grid, divide by half the sprite width/height
+    const gridX = Math.floor(x / (sprite.width * 1.33));
+    const gridY = Math.floor(y / (sprite.height / 2));
 
-    for (let row = gridY; row <= Math.floor((y + sprite.height) / sprite.height); row++) {
-      for (let col = gridX; col <= Math.floor((x + sprite.width) / sprite.width); col++) {
+    // Check all grid cells the sprite overlaps
+    // For a sprite twice as big, it can overlap up to 4 cells
+    for (let row = gridY; row <= Math.floor((y + sprite.height) / (sprite.height / 2)); row++) {
+      for (let col = gridX; col <= Math.floor((x + sprite.width) / (sprite.width * 1.33)); col++) {
         if (row >= 0 && row < this.gridRows && col >= 0 && col < this.gridCols) {
           if (this.backgroundGridMap[row][col] === this.gridMapTypes.wall) {
             return true;
@@ -434,22 +437,20 @@ export class GameEngine {
 
     if (this.keys.ArrowUp) {
       newY -= this.wingmanSprite.speed;
-      this.wingmanSprite.frameY = 3;
       isMoving = true;
     }
     if (this.keys.ArrowDown) {
       newY += this.wingmanSprite.speed;
-      this.wingmanSprite.frameY = 0;
       isMoving = true;
     }
     if (this.keys.ArrowLeft) {
       newX -= this.wingmanSprite.speed;
-      this.wingmanSprite.frameY = 1;
+      this.wingmanSprite.frameY = 0; // left
       isMoving = true;
     }
     if (this.keys.ArrowRight) {
       newX += this.wingmanSprite.speed;
-      this.wingmanSprite.frameY = 2;
+      this.wingmanSprite.frameY = 1; // right
       isMoving = true;
     }
 
@@ -522,12 +523,10 @@ export class GameEngine {
     if (!sprite.target) return;
 
     const dx = sprite.target.x - sprite.x;
-    const dy = sprite.target.y - sprite.y;
 
-    if (Math.abs(dx) > Math.abs(dy)) {
-      sprite.frameY = dx > 0 ? 2 : 1;
-    } else {
-      sprite.frameY = dy > 0 ? 0 : 3;
+    // Update direction based only on horizontal movement
+    if (dx !== 0) {
+      sprite.frameY = dx > 0 ? 1 : 0; // 0 for right, 1 for left
     }
   }
 
@@ -591,8 +590,6 @@ export class GameEngine {
     this.switchView("dialogue");
     this.hideContinueButton();
     const response = await this.storyEngine.onEncounter(label);
-
-    console.log("[StoryEngine]: onEncounter", response);
 
     // Update character images
     const leftCharacterImg = document.getElementById("leftCharacterImg");
@@ -854,7 +851,6 @@ export class GameEngine {
 
       // TODO: save conversation history
 
-      console.log("[ShyguyLLM]: Next action: ", action);
       this.resolveAction(action);
     });
   }
@@ -952,10 +948,7 @@ export class GameEngine {
 
     this.switchView("game");
     this.shyguyLLM.getShyGuyResponse("").then((response) => {
-      console.log("[ShyguyLLM]: Next action: ", response);
       const next_action = response.action;
-
-      console.log("response after dialogue", response);
 
       this.resolveAction(next_action);
     });
