@@ -563,6 +563,9 @@ export class GameEngine {
 
       // TODO: reenable the target so the player can visit it again
       if (!target.enabled) {
+        if (!isClose) {
+          target.enabled = true;
+        }
         continue;
       }
 
@@ -595,13 +598,13 @@ export class GameEngine {
     const leftCharacterImg = document.getElementById("leftCharacterImg");
     const rightCharacterImg = document.getElementById("rightCharacterImg");
 
-    if (leftCharacterImg && response.char1imgpath) {
-      leftCharacterImg.src = response.char1imgpath;
+    if (leftCharacterImg && response.char2imgpath) {
+      leftCharacterImg.src = response.char2imgpath;
       leftCharacterImg.style.display = "block";
     }
 
-    if (rightCharacterImg && response.char2imgpath) {
-      rightCharacterImg.src = response.char2imgpath;
+    if (rightCharacterImg && response.char1imgpath) {
+      rightCharacterImg.src = response.char1imgpath;
       rightCharacterImg.style.display = "block";
     }
 
@@ -905,14 +908,20 @@ export class GameEngine {
   }
 
   setGameOver(fromExit) {
+    if (this.gameSuccessful) {
+      this.gameOverImage.src = "assets/assets/victory.png";
+    } else {
+      this.gameOverImage.src = "assets/assets/game-over.png";
+    }
+
     if (fromExit) {
-      this.gameOverText.textContent = "You lost! The Shyguy ran away!";
+      this.gameOverText.textContent = "You lost! Shyguy ran away!";
       return;
     }
 
     this.gameOverText.textContent = this.gameSuccessful
-      ? "You won! The Shyguy got a date!"
-      : "You lost! The Shyguy got rejected!";
+      ? "You won! Shyguy got a date!"
+      : "You lost! Shyguy got rejected!";
   }
 
   handleDialogueContinue() {
