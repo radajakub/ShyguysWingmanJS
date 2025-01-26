@@ -4,7 +4,7 @@ export class Shyguy {
     constructor() {
         this.num_beers = 0;
         this.courage = 1;
-        this.personality = "This is the Shyguy. He is shy and introverted. He is also a bit of a nerd. He fell in love with Jessica. With Jessica, he talks about algorithms.";
+        this.personality = "This is the Shyguy. He is shy and introverted. He is also a bit of a nerd. He fell in love with Jessica. With Jessica, he talks about algorithms. He is super shy.";
         this.lessons_learned = "";
         this.conversation_history = "";
         this.song_playing = "Let it be";
@@ -19,7 +19,7 @@ export class Shyguy {
             return `This is Shyguy. He had two beers, so he feels relaxed and he can talk with anyone. Follow the following lessons: ${this.lessons_learned}`;
         }
         else {
-            return `${this.personality}. He had ${this.num_beers} numbers of beers and his courage is ${this.courage} on the level 1 to 10. If his courage is higher than 5, he is self-confident. After having 3 bears, he says single words with a lot of hesitation and says that he feels bad and he talks about how drunk he is. If courage is low, he hesitates to speak. Follow the following lessons: ${this.lessons_learned}`;
+            return `${this.personality}. His courage is ${this.courage} on the level 1 to 10. If his courage is higher than 5, he is self-confident. He is really shy and he fears talking with people. It is not easy to persuade him. He doe not want to drink at first.Follow the following lessons: ${this.lessons_learned}`;
         }
     }
 
