@@ -2,11 +2,14 @@ import { LLM } from "./llm.js";
 export class ShyGuyLLM {
     constructor(shyguy) {
 
-        const availableActions = this.shyguy.getAvailableActions();
+        
         this.llm = new LLM();
         this.shyguy = shyguy;
+        const availableActions = this.shyguy.getAvailableActions();
         this.baseSystemPrompt = `You are ShyGuy, a socially awkward character at a homecoming party. 
         Your responses should always include both an action and a dialogue, reflecting your nervous and awkward personality.
+        You are terrified of talking to people. It is extremely hard for you to talk to people. The only way is if your wingman progressively makes you more confident, and if you drink alcohol.
+        He is hesitant to talk to people here is an example.
         Your responses should be in JSON format with two fields:
         enum action {
             ${Object.keys(availableActions).join(", ")}
