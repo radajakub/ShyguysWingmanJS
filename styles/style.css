@@ -500,3 +500,12 @@ body {
     transform: translateY(0);
   }
 }
+
+/* Add this to flip the left character image */
+#leftCharacterImg {
+  transform: scaleX(-1); /* This will mirror the image horizontally */
+}
+
+#rightCharacterImg {
+  transform: scaleX(-1); /* This will mirror the image horizontally */
+}

@@ -595,13 +595,13 @@ export class GameEngine {
     const leftCharacterImg = document.getElementById("leftCharacterImg");
     const rightCharacterImg = document.getElementById("rightCharacterImg");
 
-    if (leftCharacterImg && response.char1imgpath) {
-      leftCharacterImg.src = response.char1imgpath;
+    if (leftCharacterImg && response.char2imgpath) {
+      leftCharacterImg.src = response.char2imgpath;
       leftCharacterImg.style.display = "block";
     }
 
-    if (rightCharacterImg && response.char2imgpath) {
-      rightCharacterImg.src = response.char2imgpath;
+    if (rightCharacterImg && response.char1imgpath) {
+      rightCharacterImg.src = response.char1imgpath;
       rightCharacterImg.style.display = "block";
     }
 
