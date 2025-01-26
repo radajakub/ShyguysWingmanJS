@@ -1,4 +1,4 @@
-import { SHYGUY_LABEL, SISTER_LABEL, GIRL_LABEL, BAR_LABEL, DJ_LABEL } from "./constants.js";
+import { SHYGUY_LABEL, SISTER_LABEL, GIRL_LABEL, BAR_LABEL, DJ_LABEL, WINGMAN_LABEL } from "./constants.js";
 
 export class ElevenLabsClient {
   constructor() {
@@ -12,6 +12,7 @@ export class ElevenLabsClient {
     [GIRL_LABEL]: "zQPM9vJjjzGxbs457rQj",
     [BAR_LABEL]: "XA2bIQ92TabjGbpO2xRr",
     [DJ_LABEL]: "T0pkYhIZ7UMOc26gqqeX",
+    [WINGMAN_LABEL]: "XA2bIQ92TabjGbpO2xRr",
   };
 
   async playAudioForCharacter(character, text) {

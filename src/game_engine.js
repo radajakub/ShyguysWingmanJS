@@ -2,9 +2,9 @@ import { BAR_LABEL, DJ_LABEL, EXIT_LABEL, GIRL_LABEL, SISTER_LABEL, WINGMAN_LABE
 import { nameToLabel } from "./story_engine.js";
 
 const WINGMAN_SPEED = 5;
-const SHYGUY_SPEED = 0.5;
+const SHYGUY_SPEED = 1;
 
-const IS_DEBUG = true;
+const IS_DEBUG = false;
 
 class SpriteEntity {
   constructor(x0, y0, imageSrc, speed = 0, width = 24, height = 64, frameRate = 8, frameCount = 1) {
@@ -250,13 +250,13 @@ export class GameEngine {
     this.introView = document.getElementById("introView");
     this.startGameBtn = document.getElementById("startGameBtn");
 
-    this.backgroundMusic = new Audio('assets/assets/tiny-steps-danijel-zambo-main-version-1433-01-48.mp3');
+    this.backgroundMusic = new Audio("assets/assets/tiny-steps-danijel-zambo-main-version-1433-01-48.mp3");
     this.backgroundMusic.loop = true;
-    
-    this.gameOverMusic = new Audio('/assets/assets/game-over-8bit-music-danijel-zambo-1-00-16.mp3');
+
+    this.gameOverMusic = new Audio("/assets/assets/game-over-8bit-music-danijel-zambo-1-00-16.mp3");
     this.gameOverMusic.loop = false;
-    
-    this.victoryMusic = new Audio('/assets/assets/moonlit-whispers-theo-gerard-main-version-35960-02-34.mp3');
+
+    this.victoryMusic = new Audio("/assets/assets/moonlit-whispers-theo-gerard-main-version-35960-02-34.mp3");
     this.victoryMusic.loop = false;
 
     // Move character images to class state
@@ -836,6 +836,14 @@ export class GameEngine {
   }
 
   initDebugControls() {
+    const debugControls = document.getElementById("debugControls");
+    if (!IS_DEBUG) {
+      if (debugControls) {
+        debugControls.style.display = "none";
+      }
+      return;
+    }
+
     const targetDoorBtn = document.getElementById("targetDoorBtn");
     const targetGirlBtn = document.getElementById("targetGirlBtn");
     const targetBarBtn = document.getElementById("targetBarBtn");
@@ -1021,7 +1029,7 @@ export class GameEngine {
 
   setGameOver(fromExit) {
     this.stopBackgroundMusic();
-    
+
     if (this.gameSuccessful) {
       this.gameOverImage.src = "assets/assets/victory.png";
       this.playVictoryMusic();
@@ -1087,7 +1095,7 @@ export class GameEngine {
   }
 
   playBackgroundMusic() {
-    this.backgroundMusic.play().catch(error => {
+    this.backgroundMusic.play().catch((error) => {
       console.error("Error playing background music:", error);
     });
   }
@@ -1098,13 +1106,13 @@ export class GameEngine {
   }
 
   playGameOverMusic() {
-    this.gameOverMusic.play().catch(error => {
+    this.gameOverMusic.play().catch((error) => {
       console.error("Error playing game over music:", error);
     });
   }
 
   playVictoryMusic() {
-    this.victoryMusic.play().catch(error => {
+    this.victoryMusic.play().catch((error) => {
       console.error("Error playing victory music:", error);
     });
   }
@@ -1120,13 +1128,13 @@ export class GameEngine {
   lowerMusicVolume() {
     // Store original volumes if not already stored
     if (!this.originalVolumes) {
-        this.originalVolumes = {
-            background: this.backgroundMusic.volume,
-            gameOver: this.gameOverMusic.volume,
-            victory: this.victoryMusic.volume
-        };
+      this.originalVolumes = {
+        background: this.backgroundMusic.volume,
+        gameOver: this.gameOverMusic.volume,
+        victory: this.victoryMusic.volume,
+      };
     }
-    
+
     // Lower all music volumes to 20% of their original values
     this.backgroundMusic.volume = this.originalVolumes.background * 0.2;
     this.gameOverMusic.volume = this.originalVolumes.gameOver * 0.2;
@@ -1135,13 +1143,13 @@ export class GameEngine {
   lowerMusicVolumeALot() {
     // Store original volumes if not already stored
     if (!this.originalVolumes) {
-        this.originalVolumes = {
-            background: this.backgroundMusic.volume,
-            gameOver: this.gameOverMusic.volume,
-            victory: this.victoryMusic.volume
-        };
+      this.originalVolumes = {
+        background: this.backgroundMusic.volume,
+        gameOver: this.gameOverMusic.volume,
+        victory: this.victoryMusic.volume,
+      };
     }
-    
+
     // Lower all music volumes to 20% of their original values
     this.backgroundMusic.volume = this.originalVolumes.background * 0.01;
     this.gameOverMusic.volume = this.originalVolumes.gameOver * 0.01;
