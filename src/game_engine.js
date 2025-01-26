@@ -480,6 +480,9 @@ export class GameEngine {
     if (e.key in this.keys) {
       this.keys[e.key] = true;
       this.wingmanSprite.moving = true;
+    } else if (e.key === "Enter" && this.currentView === "game" && !e.shiftKey) {
+      e.preventDefault();
+      this.handleSendMessage();
     }
   }
 
@@ -589,7 +592,15 @@ export class GameEngine {
   async handleDialogueWithStoryEngine(label) {
     this.switchView("dialogue");
     this.hideContinueButton();
+
+    // Show loading indicator
+    const dialogueBox = document.querySelector(".dialogue-box");
+    dialogueBox.classList.add("loading");
+
     const response = await this.storyEngine.onEncounter(label);
+
+    // Hide loading indicator
+    dialogueBox.classList.remove("loading");
 
     // Update character images
     const leftCharacterImg = document.getElementById("leftCharacterImg");
@@ -873,6 +884,7 @@ export class GameEngine {
   }
 
   handlePlayAgain() {
+    this.clearChat(this.gameChatContainer);
     this.resetGame();
     this.switchView("game");
   }

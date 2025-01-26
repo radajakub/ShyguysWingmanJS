@@ -509,3 +509,39 @@ body {
 #rightCharacterImg {
   transform: scaleX(-1); /* This will mirror the image horizontally */
 }
+
+/* Loading indicator styles */
+.loading-indicator {
+  display: none;
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.loading-dots::after {
+  content: "";
+  animation: dots 1.5s steps(5, end) infinite;
+}
+
+@keyframes dots {
+  0%,
+  20% {
+    content: "";
+  }
+  40% {
+    content: ".";
+  }
+  60% {
+    content: "..";
+  }
+  80%,
+  100% {
+    content: "...";
+  }
+}
+
+/* Add this to the existing .dialogue-box styles */
+.dialogue-box.loading .loading-indicator {
+  display: block;
+}
