@@ -360,7 +360,7 @@ body {
   transform: translateY(0);
 }
 
-/* Dialogue Continue Button Styles */
+/* Dialogue Controls Styles */
 .dialogue-controls {
   position: static;
   transform: none;
@@ -370,9 +370,14 @@ body {
   border-radius: 0 0 8px 8px;
   height: 80px;
   box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.continue-button {
+/* Continue and Next Button Styles */
+.continue-button,
+.next-button {
   padding: 15px 30px;
   font-size: 14px;
   background-color: #007bff;
@@ -385,13 +390,20 @@ body {
   font-family: "Press Start 2P", monospace;
 }
 
-.continue-button:hover {
+.continue-button:hover,
+.next-button:hover {
   background-color: #0056b3;
   transform: translateY(-2px);
 }
 
-.continue-button:active {
+.continue-button:active,
+.next-button:active {
   transform: translateY(0);
+}
+
+/* Hide next button by default */
+.next-button {
+  display: none;
 }
 
 .game-over-text {
@@ -421,7 +433,8 @@ body {
 .debug-button,
 .send-button,
 .mic-button,
-.continue-button {
+.continue-button,
+.next-button {
   font-family: "Press Start 2P", monospace;
   font-size: 12px;
 }
