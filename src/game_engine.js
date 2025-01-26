@@ -146,11 +146,13 @@ export class GameEngine {
     this.gridMapTypes = {
       floor: 0,
       wall: 1,
+      door: 2,
     };
 
     // load assets for drawing the scene
-    this.wall = new SpriteImage("/assets/assets/wall-tile.png");
+    this.wall = new SpriteImage("/assets/assets/wall_sprite.png");
     this.floor = new SpriteImage("/assets/assets/floor-tile.png");
+    this.door = new SpriteImage("/assets/assets/door_sprite.png");
 
     this.gridCols = Math.ceil(this.canvasWidth / this.wall.width);
     this.gridRows = Math.ceil(this.canvasHeight / this.wall.height);
@@ -263,6 +265,7 @@ export class GameEngine {
         }
       }
     }
+    this.backgroundGridMap[0][1] = this.gridMapTypes.door;
   }
 
   checkWallCollision(sprite, newX, newY) {
@@ -628,6 +631,8 @@ export class GameEngine {
           this.ctx.drawImage(this.wall.image, x, y, this.wall.width, this.wall.height);
         } else if (this.backgroundGridMap[row][col] === this.gridMapTypes.floor) {
           this.ctx.drawImage(this.floor.image, x, y, this.floor.width, this.floor.height);
+        } else if (this.backgroundGridMap[row][col] === this.gridMapTypes.door) {
+          this.ctx.drawImage(this.door.image, x, y, this.door.width, this.door.height);
         }
       }
     }
