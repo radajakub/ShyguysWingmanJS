@@ -24,7 +24,7 @@ class Bar {
     this.situation_prompt = "This conversation happens at the bar.";
     this.personality = "This is the bartender. He always offers triple vodka in his first answer.";
     // this.past_conversation = "";
-    this.imgpath = "assets/assets/barman.png";
+    this.imgpath = "assets/assets/barman.jpeg";
     this.output_format_prompt = "";
     this.functionDescriptions = [
       {
@@ -58,7 +58,7 @@ class DJ {
     this.personality =
       "This is the DJ. He is very nice and helpful. He can only play songs from the options [Let it be, Call me maybe, Shape of you]. If asked to play a song, he will play it and not propose any other song.";
     // this.past_conversation = "";
-    this.imgpath = "assets/assets/dj.png";
+    this.imgpath = "assets/assets/dj.jpeg";
     this.output_format_prompt = "";
     this.functionDescriptions = [
       {
@@ -90,7 +90,7 @@ class Sister {
     this.personality =
       "This is the sister of Jessica. She is a deeply religious Christian. She is helpful in her second answer, her first answer is rude. If asked about the favourite song of the girl, she says it is 'Call me maybe'.";
     // this.past_conversation = "";
-    this.imgpath = "assets/assets/sister.png";
+    this.imgpath = "assets/assets/sister.jpeg";
     this.functionDescriptions = [
       {
         key: "analyzeMood",
@@ -121,7 +121,7 @@ class Girl {
     this.name = "Jessica";
     this.situation_prompt = "This is a conversation with the Jessica. She is the girl that shyguy likes.";
     this.personality = "This is Jessica. She is shy but nice. She likes the song 'Call me maybe'.";
-    this.imgpath = "assets/assets/jessica.png";
+    this.imgpath = "assets/assets/jessica.jpeg";
     this.output_format_prompt = "";
     this.shyguy = shyguy;
     this.functionDescriptions = [
@@ -153,7 +153,7 @@ class Wingman {
     this.name = "wingman";
     this.situation_prompt = "This conversation happens with your wingman at the party.";
     this.personality = "This is your wingman. He is experienced with dating and gives practical advice. He's supportive but direct, and always encourages confidence without being aggressive.";
-    this.imgpath = "assets/assets/wingman.png";
+    this.imgpath = "assets/assets/wingman.jpeg";
     this.output_format_prompt = "";
     this.functionDescriptions = [
       {

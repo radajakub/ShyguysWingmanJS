@@ -8,7 +8,7 @@ export class Shyguy {
         this.lessons_learned = "";
         this.conversation_history = "";
         this.song_playing = "Let it be";
-        this.imgpath = "assets/assets/shyguy-headshot.png";
+        this.imgpath = "assets/assets/shyguy_headshot.jpeg";
         this.last_actions = [];
     }
 
