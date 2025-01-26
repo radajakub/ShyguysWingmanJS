@@ -232,6 +232,7 @@ export class StoryEngine {
     console.log(conversation_output);
 
     this.updateStates(conversation_output.analysis, targetEntity.name);
+
     return {
       conversation: conversation,
       char1imgpath: this.shyguy.imgpath,

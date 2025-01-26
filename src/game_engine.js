@@ -571,8 +571,8 @@ export class GameEngine {
         leftCharacterImg.style.display = "block";
     }
     
-    if (rightCharacterImg && response.char2imagepath) {
-        rightCharacterImg.src = response.char2imagepath;
+    if (rightCharacterImg && response.char2imgpath) {
+        rightCharacterImg.src = response.char2imgpath;
         rightCharacterImg.style.display = "block";
     }
 
