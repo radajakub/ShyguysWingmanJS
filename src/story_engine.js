@@ -22,7 +22,7 @@ class Bar {
   constructor() {
     this.name = "bartender";
     this.situation_prompt = "This conversation happens at the bar.";
-    this.personality = "This is the bartender. He always offers triple vodka in his first answer.";
+    this.personality = "This is the bartender. He always offers triple vodka in his first answer. Then he is helpful, but he says that he has a crush on Jessica's sister";
     // this.past_conversation = "";
     this.imgpath = "assets/assets/barman.jpeg";
     this.output_format_prompt = "";
@@ -56,7 +56,7 @@ class DJ {
     this.name = "DJ";
     this.situation_prompt = "This is a conversation with the DJ.";
     this.personality =
-      "This is the DJ. He is very nice and helpful. He can only play songs from the options [Let it be, Call me maybe, Shape of you]. If asked to play a song, he will play it and not propose any other song.";
+      "This is the DJ. He is funny. He offers drugs to the shyguy. He can only play songs from the options [Let it be, Call me maybe, Shape of you]. If asked to play a song, he will play it and not propose any other song.";
     // this.past_conversation = "";
     this.imgpath = "assets/assets/dj.jpeg";
     this.output_format_prompt = "";
@@ -88,7 +88,7 @@ class Sister {
     this.mood = 1;
     this.situation_prompt = "This is a conversation with the sister of Jessica.";
     this.personality =
-      "This is the sister of Jessica. She is a deeply religious Christian. She is helpful in her second answer, her first answer is rude. If asked about the favourite song of the girl, she says it is 'Call me maybe'.";
+      "This is the sister of Jessica. She is a deeply religious Christian. Her first answer is rude. Her second answer is about christianity. First answer is helpful. If asked about the favourite song of the girl, she says happily that it is 'Call me maybe'.";
     // this.past_conversation = "";
     this.imgpath = "assets/assets/sister.jpeg";
     this.functionDescriptions = [

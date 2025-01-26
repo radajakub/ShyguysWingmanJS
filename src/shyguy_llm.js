@@ -5,10 +5,11 @@ export class ShyGuyLLM {
     this.shyguy = shyguy;
     this.currentConversation = [];  // Array to store current conversation messages
     const availableActions = this.shyguy.getAvailableActions();
-    this.baseSystemPrompt = `You are ShyGuy, a socially awkward character at a homecoming party. 
-        Your responses should always include both an action and a dialogue, reflecting your nervous and awkward personality.
-        You are terrified of talking to people. It is extremely hard for you to talk to people. The only way is if your wingman progressively makes you more confident, and if you drink alcohol.
-        He is hesitant to talk to people here is an example.
+    this.baseSystemPrompt = `You are ShyGuy, a socially awkward character at a homecoming party. You are shy.
+        The wingman progressively makes you more confident, and if you drink alcohol.
+        You know the wingman, he is your friend. You are talking to him.
+        You are willing to have a little alcohol.
+        The action should correspond to the dialogue.
         Your responses should be in JSON format with two fields:
         enum action {
             ${Object.keys(availableActions).join(", ")}
@@ -22,36 +23,37 @@ export class ShyGuyLLM {
     
     getSystemPrompt() {
         let addToPrompt = "";
+        // Add historical conversation context if it exists
+        if (this.shyguy.conversation_history) {
+            addToPrompt += `\n\nPrevious interactions:\n${this.shyguy.conversation_history}`;
+        }
         if (this.shyguy.num_beers > 0) {
-            addToPrompt = `You are likely to go to the DJ or sister.\n`;
+            addToPrompt += `You are likely to go to the DJ or sister.\n`;
         }
         if (this.shyguy.num_beers > 2) {
-            addToPrompt = `You are likely to go to the DJ or sister. You are very likely to go to the girl. You feel confident about talking to the girl.\n`;
+            addToPrompt += `You are likely to go to the DJ or sister. You are very likely to go to the girl. You feel confident about talking to the girl.\n`;
         }
         if (this.shyguy.num_beers > 3) {
-            addToPrompt = `You are drunk and you start talking about throwing up. You get annoying. You are very likely to go to the\n`;
+            addToPrompt += `You are drunk and you start talking about how bad you feel. You are annoying. You talk about algorithms and then how bad you feel.\n`;
         }
-        if (this.shyguy.courage < 3) {
-            addToPrompt = `You are shy and your dialogue should be more shy.`;
+        if (this.shyguy.courage < 2) {
+            addToPrompt += `You are shy. However, you believe wingman.`;
+        }
+        if (this.shyguy.courage >= 2) {
+            addToPrompt += `You talk normally.`;
         }
         if (this.shyguy.courage > 5) {
-            addToPrompt = `You are self-confident.`;
+            addToPrompt += `You are self-confident.`;
         }
         if (this.shyguy.courage > 8) {
-            addToPrompt = `You are too self-confident and annoying.`;
+            addToPrompt += `You are too self-confident and annoying.`;
         }
-
-        // Add conversation context if it exists
+        addToPrompt += `\nYou drank ${this.shyguy.num_beers} beers. Your courage is ${this.shyguy.courage}.`;
         if (this.currentConversation.length > 0) {
             addToPrompt += `\n\nCurrent conversation context:\n`;
             this.currentConversation.forEach(msg => {
                 addToPrompt += `${msg.role}: ${msg.content}\n`;
             });
-        }
-
-        // Add historical conversation context if it exists
-        if (this.shyguy.conversation_history) {
-            addToPrompt += `\n\nPrevious interactions:\n${this.shyguy.conversation_history}`;
         }
 
         return this.baseSystemPrompt + addToPrompt;
@@ -68,7 +70,7 @@ export class ShyGuyLLM {
         this.currentConversation = [];
     }
 
-    async getShyGuyResponse(situation) {
+    async getShyGuyResponse(player_message) {
         try {
             const availableActions = this.shyguy.getAvailableActions();
             const actionsPrompt = `\nYour currently available actions are: ${Object.keys(availableActions)
@@ -76,13 +78,13 @@ export class ShyGuyLLM {
                 .join("")}`;
 
             // Add the situation to current conversation
-            this.addToCurrentConversation('user', situation);
+            this.addToCurrentConversation('wingman', player_message);
 
             const fullPrompt = this.getSystemPrompt() + actionsPrompt;
-            const response = await this.llm.getJsonCompletion(fullPrompt, situation);
+            const response = await this.llm.getJsonCompletion(fullPrompt, player_message);
 
             // Add ShyGuy's response to current conversation
-            this.addToCurrentConversation('assistant', response.dialogue);
+            this.addToCurrentConversation('shyguy', response.dialogue);
 
             // Add to overall conversation history
             this.shyguy.conversation_history += `\nShyguy: ${response.dialogue}\n`;

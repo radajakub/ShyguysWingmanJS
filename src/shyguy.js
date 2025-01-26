@@ -4,7 +4,7 @@ export class Shyguy {
     constructor() {
         this.num_beers = 0;
         this.courage = 1;
-        this.personality = "This is the shy guy. He is shy and introverted. He is also a bit of a nerd. He likes Jessica. But with Jessica, he talks about algorithms.";
+        this.personality = "This is the Shyguy. He is shy and introverted. He is also a bit of a nerd. He fell in love with Jessica. With Jessica, he talks about algorithms.";
         this.lessons_learned = "";
         this.conversation_history = "";
         this.song_playing = "Let it be";
@@ -13,7 +13,14 @@ export class Shyguy {
     }
 
     getSystemPrompt() {
-        return `${this.personality}. He had ${this.num_beers} numbers of beers and his courage is ${this.courage} on the level 1 to 10. If his courage is higher than 5, he is self-confident. After having 3 bears, he says single words with a lot of hesitation and says that he feels bad and he's about to throw up. If courage is low, he hesitates to speak. Follow the following lessons: ${this.lessons_learned}`;
+        if (this.num_beers >= 3) {
+            return `${this.personality}. His courage is ${this.courage} on the level 1 to 10. If his courage is higher than 5, he is self-confident. He had too many beers and he is drunk. He talks about how drunk he is. Follow the following lessons: ${this.lessons_learned}`;
+        } else if (this.num_beers == 2) {
+            return `This is Shyguy. He had two beers, so he feels relaxed and he can talk with anyone. Follow the following lessons: ${this.lessons_learned}`;
+        }
+        else {
+            return `${this.personality}. He had ${this.num_beers} numbers of beers and his courage is ${this.courage} on the level 1 to 10. If his courage is higher than 5, he is self-confident. After having 3 bears, he says single words with a lot of hesitation and says that he feels bad and he talks about how drunk he is. If courage is low, he hesitates to speak. Follow the following lessons: ${this.lessons_learned}`;
+        }
     }
 
     appendLesson(lesson) {
@@ -33,6 +40,16 @@ export class Shyguy {
         this.appendLesson(`When talking to ${entityName}, ${summary}`);
     }
 
+    async learnFromWingman(wingman_message) {
+        const summaryLLM = new LLM();
+        console.log("Wingman message: ", wingman_message);
+        const summary = await summaryLLM.getChatCompletion(
+            `Give a summary of what is learned from the message. Summary is one sentence. The wingman is always talking. For example, if the wingman says "Let's have a beer", the output should be "Shyguy wants a beer". If the wingman says "Let's have vodka", the output should be "Shyguy wants vodka".`,
+            wingman_message
+        );
+        this.appendLesson(summary);
+    }
+
     getAvailableActions() {
         let actions = {};
         const lastAction = this.last_actions[this.last_actions.length - 1];
@@ -41,7 +58,7 @@ export class Shyguy {
         if (this.num_beers === 0) {
             actions = {
                 "go_bar": {
-                    description: "Head to the bar for liquid courage",
+                    description: "Head to the bar.",
                     location: "bar",
                 },
                 "go_home": {
@@ -53,8 +70,29 @@ export class Shyguy {
                     location: "idle",
                 }
             };
+        }
+        else if (this.num_beers >= 2) {
+            // After 2+ beers, all actions except going home are available
+            actions = {
+                "go_bar": {
+                    description: "Head to the bar for liquid courage", 
+                    location: "bar",
+                },
+                "go_dj": {
+                    description: "Talk to the DJ about playing a song",
+                    location: "dj_booth",
+                },
+                "go_sister": {
+                    description: "Approach your crush's sister",
+                    location: "sister",
+                },
+                "go_girl": {
+                    description: "Approach your crush",
+                    location: "girl",
+                }
+            };
         } else {
-            // After at least one beer, all actions become available
+            // After 1 beer but less than 2, all actions are available
             actions = {
                 "go_bar": {
                     description: "Head to the bar for liquid courage",
