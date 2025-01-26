@@ -131,6 +131,7 @@ export class GameEngine {
     this.handleDialogueContinue = this.handleDialogueContinue.bind(this);
 
     this.pushEnabled = false;
+    this.voiceEnabled = !IS_DEBUG;
 
     // Debug controls
     this.initDebugControls();
@@ -583,9 +584,8 @@ export class GameEngine {
       const label = nameToLabel(role);
       this.addChatMessage(this.dialogueChatContainer, content, label, true);
 
-      // read the text by llm
-
-      if (!IS_DEBUG) {
+      // Only play audio if voice is enabled
+      if (this.voiceEnabled) {
         try {
           await this.elevenLabsClient.playAudioForCharacter(label, content);
         } catch (error) {
@@ -700,6 +700,7 @@ export class GameEngine {
     const stopNavBtn = document.getElementById("stopNavBtn");
     const togglePushBtn = document.getElementById("togglePushBtn");
     const speedBoostBtn = document.getElementById("speedBoostBtn");
+    const toggleVoiceBtn = document.getElementById("toggleVoiceBtn");
 
     switchToGameBtn.addEventListener("click", () => this.showGameView());
     switchToDialogueBtn.addEventListener("click", () => this.showDialogueView());
@@ -729,6 +730,12 @@ export class GameEngine {
         this.shyguySprite.setSpeed(SHYGUY_SPEED);
         speedBoostBtn.textContent = "Speed Boost";
       }
+    });
+
+    // Add voice toggle handler
+    toggleVoiceBtn.addEventListener("click", () => {
+      this.voiceEnabled = !this.voiceEnabled;
+      toggleVoiceBtn.textContent = this.voiceEnabled ? "Disable Voice" : "Enable Voice";
     });
   }
 
@@ -796,26 +803,23 @@ export class GameEngine {
       const dialogue = response.dialogue;
       const action = response.action;
 
-      // TODO: add the messages to the context of the prompts
-
-      // Add message to the chat view
       this.addChatMessage(this.gameChatContainer, dialogue, SHYGUY_LABEL, false);
 
-      // read the message in an asynchronous way
-      if (!IS_DEBUG) {
+      // Only play audio if voice is enabled
+      if (this.voiceEnabled) {
         this.disableGameInput();
         await this.elevenLabsClient.playAudioForCharacter(SHYGUY_LABEL, dialogue);
         this.enableGameInput();
       }
 
       console.log("[ShyguyLLM]: Next action: ", action);
-
       this.resolveAction(action);
     });
   }
 
   async handleSendMessage() {
     const message = this.messageInput.value.trim();
+    if (message.length === 0) return;
     this.sendMessageToShyguy(message);
   }
 
@@ -901,6 +905,7 @@ export class GameEngine {
       console.log("[ShyguyLLM]: Next action: ", response);
       const next_action = response.action;
 
+      console.log(this.shyguy);
       this.resolveAction(next_action);
     });
   }
