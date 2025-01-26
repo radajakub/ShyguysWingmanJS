@@ -52,20 +52,6 @@ export class ConversationLLM {
                 
                 conversation.push(parsedResponse);
             }
-            
-            // After the conversation is complete, analyze for beer consumption
-            // const functionDescriptions = [{
-            //     key: "analyzeBeerConsumption",
-            //     description: "Analyze the conversation to determine how many beers were consumed",
-            //     parameters: {
-            //         totalBeers: {
-            //             type: "number",
-            //             description: "Total number of beers mentioned as being consumed in the conversation"
-            //         },
-            //     }
-            // }];
-            //`Analyze this conversation and determine how many beers were consumed: ${JSON.stringify(conversation)}`
-
 
             const analysis = await llm.getFunctionKey(
                 this.functionDescriptions,
@@ -82,8 +68,7 @@ export class ConversationLLM {
         }
     }
     parseConversation(llmResponse) {
-        // Implement parsing logic based on your output format
-        // This should return an array of conversation turns
+        
         return llmResponse;
     }
 }

@@ -6,9 +6,10 @@ export class Shyguy {
         this.courage = 1;
         this.personality = "This is the shy guy. He is shy and introverted. He is also a bit of a nerd. He likes Jessica. But with Jessica, he talks about algorithms.";
         this.lessons_learned = "";
-        this.conversation_history = "When you talk to the Jessica's sister (not Jessica), ask about the favourite song of Jessica. If offered triple vodka by the bartender, agree. When talking to DJ, he asks to play 'Call me maybe'. With Jessica, do not talk about algorithms.";
+        this.conversation_history = "";
         this.song_playing = "Let it be";
         this.imgpath = "assets/assets/shyguy-headshot.png";
+        this.last_actions = [];
     }
 
     getSystemPrompt() {
@@ -29,9 +30,12 @@ export class Shyguy {
     }
 
     getAvailableActions() {
+        let actions = {};
+        const lastAction = this.last_actions[this.last_actions.length - 1];
+
         // When sober, can only go to the bar or home
         if (this.num_beers === 0) {
-            return {
+            actions = {
                 "go_bar": {
                     description: "Head to the bar for liquid courage",
                     location: "bar",
@@ -40,31 +44,42 @@ export class Shyguy {
                     description: "Give up and head home",
                     location: "exit",
                 },
+                "stay_idle": {
+                    description: "Stay idle",
+                    location: "idle",
+                }
+            };
+        } else {
+            // After at least one beer, all actions become available
+            actions = {
+                "go_bar": {
+                    description: "Head to the bar for liquid courage",
+                    location: "bar",
+                },
+                "go_home": {
+                    description: "Give up and head home",
+                    location: "exit",
+                },
+                "go_dj": {
+                    description: "Talk to the DJ about playing a song",
+                    location: "dj_booth",
+                },
+                "go_sister": {
+                    description: "Approach your crush's sister",
+                    location: "sister",
+                },
+                "go_girl": {
+                    description: "Approach your crush",
+                    location: "girl",
+                }
             };
         }
 
-        // After at least one beer, all actions become available
-        return {
-            "go_bar": {
-                description: "Head to the bar for liquid courage",
-                location: "bar",
-            },
-            "go_home": {
-                description: "Give up and head home",
-                location: "exit",
-            },
-            "go_dj": {
-                description: "Talk to the DJ about playing a song",
-                location: "dj_booth",
-            },
-            "go_sister": {
-                description: "Approach your crush's sister",
-                location: "sister",
-            },
-            "go_girl": {
-                description: "Approach your crush",
-                location: "girl",
-            }
-        };
+        // Remove the last action from available actions
+        if (lastAction && actions[lastAction]) {
+            delete actions[lastAction];
+        }
+
+        return actions;
     }
 }

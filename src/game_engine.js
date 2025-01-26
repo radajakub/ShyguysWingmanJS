@@ -768,6 +768,9 @@ export class GameEngine {
   resolveAction(action) {
     // TODO: resolve the action
     switch (action) {
+      case "stay_idle":
+        this.setNewTarget(null);
+        break;
       case "go_bar":
         this.setNewTarget(this.targets.bar);
         break;

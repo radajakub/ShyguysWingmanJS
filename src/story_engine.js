@@ -222,6 +222,9 @@ export class StoryEngine {
     const conversation_output = await conversation_llm.generateConversation(6);
     const conversation = conversation_output.conversation;
 
+    // Append the conversation to shyguy's history
+    this.shyguy.conversation_history += `\nConversation with ${targetEntity.name}:\n${conversation}\n`;
+
     let gameOver = this.decideGameOver(conversation_output.analysis.parameters.game_over);
     let gameSuccesful = this.decideGameSuccesful(conversation_output.analysis.parameters.likes_shyguy);
     if (targetEntity.name === "Jessica" && !gameSuccesful) {
