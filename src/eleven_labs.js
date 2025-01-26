@@ -1,8 +1,9 @@
 import { SHYGUY_LABEL, SISTER_LABEL, GIRL_LABEL, BAR_LABEL, DJ_LABEL, WINGMAN_LABEL } from "./constants.js";
+import { ELEVENLABS_API_KEY } from "../api.js";
 
 export class ElevenLabsClient {
   constructor() {
-    this.apiKey = "***REMOVED***";
+    this.apiKey = ELEVENLABS_API_KEY;
     this.baseUrl = "https://api.elevenlabs.io/v1";
   }
 

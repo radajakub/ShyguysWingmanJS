@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "dotenv": "^16.4.7",
     "elevenlabs": "^1.50.4"
   },
   "devDependencies": {

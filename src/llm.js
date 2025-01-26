@@ -1,6 +1,8 @@
+import { MISTRAL_API_KEY } from "../api.js";
+
 export class LLM {
   constructor() {
-    this.apiKey = "***REMOVED***";
+    this.apiKey = MISTRAL_API_KEY;
   }
 
   async getChatCompletion(systemPrompt, userInput) {
