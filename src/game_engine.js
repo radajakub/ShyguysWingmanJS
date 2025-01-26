@@ -173,6 +173,7 @@ export class GameEngine {
     this.jessicaSprite = new SpriteImage("/assets/assets/jessica_sprite.png", 64, 64);
     this.djSprite = new SpriteImage("/assets/assets/dj_sprite.png", 64, 64);
     this.barSprite = new SpriteImage("/assets/assets/bar_sprite.png", 64, 64);
+    this.sisterSprite = new SpriteImage("/assets/assets/sister_sprite.png", 64, 64);
 
     this.targets = {
       exit: new Target(EXIT_LABEL, this.wall.width, this.wall.height, this.wall.width, this.wall.height, "red", true),
@@ -205,10 +206,10 @@ export class GameEngine {
       ),
       sister: new Target(
         SISTER_LABEL,
-        this.canvasWidth - this.wall.width - this.shyguySprite.width,
+        this.canvasWidth - this.wall.width - this.sisterSprite.width,
         this.wall.height,
-        this.wall.width,
-        this.wall.height,
+        this.sisterSprite.width,
+        this.sisterSprite.height,
         "yellow",
         true
       ),
@@ -634,6 +635,7 @@ export class GameEngine {
     this.drawTargetSprite(this.jessicaSprite, this.targets.girl);
     this.drawTargetSprite(this.barSprite, this.targets.bar);
     this.drawTargetSprite(this.djSprite, this.targets.dj);
+    this.drawTargetSprite(this.sisterSprite, this.targets.sister);
 
     // Draw shyguy
     this.ctx.drawImage(
