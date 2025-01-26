@@ -170,7 +170,9 @@ export class GameEngine {
       WINGMAN_SPEED
     );
 
-    this.jessicaSprite = new SpriteImage("/assets/assets/jessica.png", 64, 64);
+    this.jessicaSprite = new SpriteImage("/assets/assets/jessica_sprite.png", 64, 64);
+    this.djSprite = new SpriteImage("/assets/assets/dj_sprite.png", 64, 64);
+    this.barSprite = new SpriteImage("/assets/assets/bar_sprite.png", 64, 64);
 
     this.targets = {
       exit: new Target(EXIT_LABEL, this.wall.width, this.wall.height, this.wall.width, this.wall.height, "red", true),
@@ -185,19 +187,19 @@ export class GameEngine {
       ),
       bar: new Target(
         BAR_LABEL,
-        this.canvasWidth / 2 - this.wall.width / 2,
-        this.canvasHeight - this.wall.height - this.shyguySprite.width,
-        this.wall.width,
+        (this.canvasWidth - this.wall.width - this.barSprite.width) / 2,
         this.wall.height,
+        this.barSprite.width,
+        this.barSprite.height,
         "blue",
         true
       ),
       dj: new Target(
         DJ_LABEL,
         this.wall.width,
-        this.canvasHeight / 2 - this.wall.height / 2,
-        this.wall.width,
-        this.wall.height,
+        (this.canvasHeight - this.wall.height - this.djSprite.height) / 2,
+        this.djSprite.width,
+        this.djSprite.height,
         "green",
         true
       ),
@@ -629,8 +631,9 @@ export class GameEngine {
       }
     }
 
-    // Draw jessica
     this.drawTargetSprite(this.jessicaSprite, this.targets.girl);
+    this.drawTargetSprite(this.barSprite, this.targets.bar);
+    this.drawTargetSprite(this.djSprite, this.targets.dj);
 
     // Draw shyguy
     this.ctx.drawImage(
