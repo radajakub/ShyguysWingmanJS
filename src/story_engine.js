@@ -235,6 +235,7 @@ export class StoryEngine {
     console.log(conversation_output);
 
     this.updateStates(conversation_output.analysis, targetEntity.name);
+    console.log("shyguy num_beers: " + this.shyguy.num_beers);
 
     return {
       conversation: conversation,
@@ -276,7 +277,7 @@ export class StoryEngine {
       if (conversation_analysis.parameters.num_beers !== "none") {
         this.shyguy.num_beers += Number(conversation_analysis.parameters.num_beers);
         this.shyguy.courage += 2 * Number(conversation_analysis.parameters.num_beers);
-        this.shyguy.num_bears += 3 * Number(conversation_analysis.parameters.heavy_alcohol === true);
+        this.shyguy.num_beers += 3 * Number(conversation_analysis.parameters.heavy_alcohol === true);
         console.log("Shyguy num_beers inside updateStates: " + this.shyguy.num_beers);
         this.shyguy.courage += 3 * Number(conversation_analysis.parameters.heavy_alcohol);
       }
