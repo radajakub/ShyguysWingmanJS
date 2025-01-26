@@ -712,6 +712,16 @@ export class GameEngine {
       }
     }
 
+    if (!response.gameOver && !response.gameSuccessful) {
+      this.gameOver = false;
+    } else if (response.gameOver && !response.gameSuccessful) {
+      this.gameOver = true;
+      this.gameSuccessful = false;
+    } else if (!response.gameOver && response.gameSuccessful) {
+      this.gameOver = true;
+      this.gameSuccessful = true;
+    }
+
     this.gameOver = response.gameOver;
     this.gameSuccessful = response.gameSuccesful;
 
