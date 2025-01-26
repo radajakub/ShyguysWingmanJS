@@ -94,10 +94,15 @@ export class GameEngine {
 
     this.shouldContinue = true;
 
+    this.gameOver = false;
+    this.gameSuccessful = false;
+
     this.gameChatContainer = document.getElementById("chatMessages");
     this.messageInput = document.getElementById("messageInput");
     this.sendButton = document.getElementById("sendButton");
     this.microphoneButton = document.getElementById("micButton");
+    this.gameOverImage = document.getElementById("gameOverImage");
+    this.gameOverText = document.getElementById("gameOverText");
 
     this.dialogueChatContainer = document.getElementById("dialogueMessages");
     this.dialogueContinueButton = document.getElementById("dialogueContinueButton");
@@ -129,6 +134,7 @@ export class GameEngine {
     this.handleSendMessage = this.handleSendMessage.bind(this);
     this.handleMicrophone = this.handleMicrophone.bind(this);
     this.handleDialogueContinue = this.handleDialogueContinue.bind(this);
+    this.setGameOver = this.setGameOver.bind(this);
 
     this.pushEnabled = false;
     this.voiceEnabled = !IS_DEBUG;
@@ -211,19 +217,6 @@ export class GameEngine {
     this.isRecording = false;
   }
 
-  // async loadAssets() {
-  //   try {
-  //     await Promise.all([
-  //       this.wall.waitForLoad(),
-  //       this.floor.waitForLoad(),
-  //       this.shyguySprite.waitForLoad(),
-  //       this.wingmanSprite.waitForLoad(),
-  //     ]);
-  //   } catch (error) {
-  //     console.error("Failed to load assets:", error);
-  //   }
-  // }
-
   init() {
     this.canvas.width = this.canvasWidth;
     this.canvas.height = this.canvasHeight;
@@ -243,9 +236,14 @@ export class GameEngine {
     this.shyguySprite.setTarget(this.targets.exit);
   }
 
-  endGame() {
-    this.shouldContinue = false;
-    this.switchView("gameOver");
+  setResetCallback(func) {
+    this.resetCallback = func;
+  }
+
+  resetGame() {
+    if (this.resetCallback) {
+      this.resetCallback();
+    }
   }
 
   initBackgroundGridMap() {
@@ -546,8 +544,10 @@ export class GameEngine {
         this.stopShyguyAnimation(target);
 
         if (target.label === EXIT_LABEL) {
-          this.endGame();
-          // END THE GAME
+          this.gameOver = true;
+          this.gameSuccessful = false;
+          this.setGameOver(true);
+          this.switchView("gameOver");
         } else {
           await this.handleDialogueWithStoryEngine(target.label);
         }
@@ -566,18 +566,20 @@ export class GameEngine {
     // Update character images
     const leftCharacterImg = document.getElementById("leftCharacterImg");
     const rightCharacterImg = document.getElementById("rightCharacterImg");
-    
+
     if (leftCharacterImg && response.char1imgpath) {
-        leftCharacterImg.src = response.char1imgpath;
-        leftCharacterImg.style.display = "block";
+      leftCharacterImg.src = response.char1imgpath;
+      leftCharacterImg.style.display = "block";
     }
-    
+
     if (rightCharacterImg && response.char2imgpath) {
-        rightCharacterImg.src = response.char2imgpath;
-        rightCharacterImg.style.display = "block";
+      rightCharacterImg.src = response.char2imgpath;
+      rightCharacterImg.style.display = "block";
     }
 
     const conversation = response.conversation;
+
+    // TODO: set the images if they are available
 
     for (const message of conversation) {
       const { role, content } = message;
@@ -593,6 +595,9 @@ export class GameEngine {
         }
       }
     }
+
+    this.gameOver = response.gameOver;
+    this.gameSuccessful = response.gameSuccesful;
 
     this.showContinueButton();
   }
@@ -690,8 +695,6 @@ export class GameEngine {
   }
 
   initDebugControls() {
-    const switchToGameBtn = document.getElementById("switchToGameBtn");
-    const switchToDialogueBtn = document.getElementById("switchToDialogueBtn");
     const targetDoorBtn = document.getElementById("targetDoorBtn");
     const targetGirlBtn = document.getElementById("targetGirlBtn");
     const targetBarBtn = document.getElementById("targetBarBtn");
@@ -702,8 +705,6 @@ export class GameEngine {
     const speedBoostBtn = document.getElementById("speedBoostBtn");
     const toggleVoiceBtn = document.getElementById("toggleVoiceBtn");
 
-    switchToGameBtn.addEventListener("click", () => this.showGameView());
-    switchToDialogueBtn.addEventListener("click", () => this.showDialogueView());
     targetDoorBtn.addEventListener("click", () => this.setNewTarget(this.targets.exit));
     targetGirlBtn.addEventListener("click", () => this.setNewTarget(this.targets.girl));
     targetBarBtn.addEventListener("click", () => this.setNewTarget(this.targets.bar));
@@ -812,6 +813,8 @@ export class GameEngine {
         this.enableGameInput();
       }
 
+      // TODO: save conversation history
+
       console.log("[ShyguyLLM]: Next action: ", action);
       this.resolveAction(action);
     });
@@ -834,29 +837,8 @@ export class GameEngine {
   }
 
   handlePlayAgain() {
-    // Reset game state
-    this.init();
-    // Switch back to game view
+    this.resetGame();
     this.switchView("game");
-  }
-
-  resetGame() {
-    // Reset player positions
-    const cx = this.canvasWidth / 2;
-    const cy = this.canvasHeight / 2;
-    this.shyguySprite.x = cx;
-    this.shyguySprite.y = cy;
-    this.wingmanSprite.x = this.wall.width;
-    this.wingmanSprite.y = this.canvasHeight - 2 * this.wall.width;
-
-    // Reset targets
-    Object.values(this.targets).forEach((target) => {
-      target.enabled = true;
-    });
-
-    // Reset other game state
-    this.shouldContinue = true;
-    this.shyguySprite.setTarget(this.targets.exit);
   }
 
   async handleMicrophone() {
@@ -886,18 +868,37 @@ export class GameEngine {
     this.dialogueContinueButton.style.display = "none";
   }
 
+  setGameOver(fromExit) {
+    // TODO: set the image and text
+    if (fromExit) {
+      this.gameOverText.textContent = "You lost! The Shyguy ran away!";
+      return;
+    }
+
+    this.gameOverText.textContent = this.gameSuccessful
+      ? "You won! The Shyguy got a date!"
+      : "You lost! The Shyguy got rejected!";
+  }
+
   handleDialogueContinue() {
     this.clearChat(this.dialogueChatContainer);
-    
+
     // Hide character images
     const leftCharacterImg = document.getElementById("leftCharacterImg");
     const rightCharacterImg = document.getElementById("rightCharacterImg");
-    
+
     if (leftCharacterImg) {
-        leftCharacterImg.style.display = "none";
+      leftCharacterImg.style.display = "none";
     }
     if (rightCharacterImg) {
-        rightCharacterImg.style.display = "none";
+      rightCharacterImg.style.display = "none";
+    }
+
+    // decide if game is over
+    if (this.gameOver) {
+      this.setGameOver(false);
+      this.switchView("gameOver");
+      return;
     }
 
     this.switchView("game");
@@ -905,7 +906,13 @@ export class GameEngine {
       console.log("[ShyguyLLM]: Next action: ", response);
       const next_action = response.action;
 
-      console.log(this.shyguy);
+      console.log("response after dialogue", response);
+
+      // Enable push if shyguy has had at least one beer
+      if (this.shyguy.num_beers > 0 && !this.pushEnabled) {
+        this.enablePush();
+      }
+
       this.resolveAction(next_action);
     });
   }
