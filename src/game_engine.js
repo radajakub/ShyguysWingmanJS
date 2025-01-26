@@ -936,17 +936,17 @@ export class GameEngine {
       return;
     }
 
+    // Enable push if shyguy has had at least one beer
+    if (this.shyguy.num_beers > 0) {
+      this.enablePush();
+    }
+
     this.switchView("game");
     this.shyguyLLM.getShyGuyResponse("").then((response) => {
       console.log("[ShyguyLLM]: Next action: ", response);
       const next_action = response.action;
 
       console.log("response after dialogue", response);
-
-      // Enable push if shyguy has had at least one beer
-      if (this.shyguy.num_beers > 0 && !this.pushEnabled) {
-        this.enablePush();
-      }
 
       this.resolveAction(next_action);
     });
