@@ -667,7 +667,7 @@ export class GameEngine {
       if (isClose) {
         // pause the game
         target.enabled = false;
-        this.stopShyguyAnimation(target);
+        this.stopShyguyAnimation();
 
         if (target.label === EXIT_LABEL) {
           this.gameOver = true;
@@ -741,7 +741,7 @@ export class GameEngine {
     this.showContinueButton();
   }
 
-  stopShyguyAnimation(target) {
+  stopShyguyAnimation() {
     this.shyguySprite.moving = false;
     this.shyguySprite.frameX = 0;
     this.shyguySprite.target = null;
@@ -990,6 +990,7 @@ export class GameEngine {
   handlePlayAgain() {
     this.clearChat(this.gameChatContainer);
     this.resetGame();
+    this.stopGameOverMusic();
     this.switchView("game");
   }
 
@@ -1114,12 +1115,16 @@ export class GameEngine {
     });
   }
 
-  stopAllMusic() {
-    this.stopBackgroundMusic();
+  stopGameOverMusic() {
     this.gameOverMusic.pause();
     this.gameOverMusic.currentTime = 0;
     this.victoryMusic.pause();
     this.victoryMusic.currentTime = 0;
+  }
+
+  stopAllMusic() {
+    this.stopBackgroundMusic();
+    this.stopGameOverMusic();
   }
 
   lowerMusicVolume() {
