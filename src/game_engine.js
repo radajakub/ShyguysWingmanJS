@@ -569,7 +569,8 @@ export class GameEngine {
   }
 
   handleKeyDown(e) {
-    if (e.key in this.keys) {
+    // Only handle arrow keys for player movement if the text input is not focused
+    if (e.key in this.keys && !document.activeElement.matches('input[type="text"], textarea')) {
       this.keys[e.key] = true;
       this.wingmanSprite.moving = true;
     } else if (e.key === "Enter" && this.currentView === "game" && !e.shiftKey) {
