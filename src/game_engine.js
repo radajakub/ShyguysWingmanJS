@@ -4,7 +4,7 @@ import { nameToLabel } from "./story_engine.js";
 const WINGMAN_SPEED = 5;
 const SHYGUY_SPEED = 1;
 
-const IS_DEBUG = false;
+const IS_DEBUG = true;
 
 class SpriteEntity {
   constructor(x0, y0, imageSrc, speed = 0, width = 24, height = 64, frameRate = 8, frameCount = 1) {
@@ -165,11 +165,11 @@ export class GameEngine {
     // Debug controls
     this.initDebugControls();
 
-    // if we have other obstacles, we can add them here
+    // configure environment building blocks and enable passing them
     this.gridMapTypes = {
-      floor: 0,
-      wall: 1,
-      door: 2,
+      floor: { index: 0, passable: true },
+      wall: { index: 1, passable: false },
+      door: { index: 2, passable: false },
     };
 
     // load assets for drawing the scene
@@ -367,13 +367,13 @@ export class GameEngine {
       for (let col = 0; col < this.gridCols; col++) {
         // Set walls and obstacles (in future)
         if (row === 0 || row === this.gridRows - 1 || col === 0 || col === this.gridCols - 1) {
-          this.backgroundGridMap[row][col] = this.gridMapTypes.wall;
+          this.backgroundGridMap[row][col] = this.gridMapTypes.wall.index;
         } else {
-          this.backgroundGridMap[row][col] = this.gridMapTypes.floor;
+          this.backgroundGridMap[row][col] = this.gridMapTypes.floor.index;
         }
       }
     }
-    this.backgroundGridMap[0][1] = this.gridMapTypes.door;
+    this.backgroundGridMap[0][1] = this.gridMapTypes.door.index;
   }
 
   checkWallCollision(sprite, newX, newY) {
@@ -388,7 +388,9 @@ export class GameEngine {
     for (let row = gridY; row <= Math.floor((y + sprite.height) / (sprite.height / 2)); row++) {
       for (let col = gridX; col <= Math.floor((x + sprite.width) / (sprite.width * 1.33)); col++) {
         if (row >= 0 && row < this.gridRows && col >= 0 && col < this.gridCols) {
-          if (this.backgroundGridMap[row][col] === this.gridMapTypes.wall) {
+          const cellType = this.backgroundGridMap[row][col];
+          const typeInfo = Object.values(this.gridMapTypes).find((type) => type.index === cellType);
+          if (typeInfo && !typeInfo.passable) {
             return true;
           }
         }
@@ -753,50 +755,45 @@ export class GameEngine {
         const x = col * this.wall.width;
         const y = row * this.wall.height;
 
-        if (this.backgroundGridMap[row][col] === this.gridMapTypes.wall) {
+        if (this.backgroundGridMap[row][col] === this.gridMapTypes.wall.index) {
           this.ctx.drawImage(this.wall.image, x, y, this.wall.width, this.wall.height);
-        } else if (this.backgroundGridMap[row][col] === this.gridMapTypes.floor) {
+        } else if (this.backgroundGridMap[row][col] === this.gridMapTypes.floor.index) {
           this.ctx.drawImage(this.floor.image, x, y, this.floor.width, this.floor.height);
-        } else if (this.backgroundGridMap[row][col] === this.gridMapTypes.door) {
+        } else if (this.backgroundGridMap[row][col] === this.gridMapTypes.door.index) {
           this.ctx.drawImage(this.door.image, x, y, this.door.width, this.door.height);
         }
       }
     }
 
+    // Draw npcs with targets
     this.drawTargetSprite(this.jessicaSprite, this.targets.girl);
     this.drawTargetSprite(this.barSprite, this.targets.bar);
     this.drawTargetSprite(this.djSprite, this.targets.dj);
     this.drawTargetSprite(this.sisterSprite, this.targets.sister);
 
     // Draw shyguy
-    this.ctx.drawImage(
-      this.shyguySprite.image,
-      this.shyguySprite.frameX * this.shyguySprite.width,
-      this.shyguySprite.frameY * this.shyguySprite.height,
-      this.shyguySprite.width,
-      this.shyguySprite.height,
-      this.shyguySprite.x,
-      this.shyguySprite.y,
-      this.shyguySprite.width,
-      this.shyguySprite.height
-    );
+    this.drawPlayerSprite(this.shyguySprite);
 
     // Draw wingman
-    this.ctx.drawImage(
-      this.wingmanSprite.image,
-      this.wingmanSprite.frameX * this.wingmanSprite.width,
-      this.wingmanSprite.frameY * this.wingmanSprite.height,
-      this.wingmanSprite.width,
-      this.wingmanSprite.height,
-      this.wingmanSprite.x,
-      this.wingmanSprite.y,
-      this.wingmanSprite.width,
-      this.wingmanSprite.height
-    );
+    this.drawPlayerSprite(this.wingmanSprite);
   }
 
   drawTargetSprite(sprite, target) {
     this.ctx.drawImage(sprite.image, target.x, target.y, target.width, target.height);
+  }
+
+  drawPlayerSprite(sprite) {
+    this.ctx.drawImage(
+      sprite.image,
+      sprite.frameX * sprite.width,
+      sprite.frameY * sprite.height,
+      sprite.width,
+      sprite.height,
+      sprite.x,
+      sprite.y,
+      sprite.width,
+      sprite.height
+    );
   }
 
   switchView(viewName) {
@@ -923,7 +920,6 @@ export class GameEngine {
   }
 
   resolveAction(action) {
-    // TODO: resolve the action
     switch (action) {
       case "stay_idle":
         this.setNewTarget(null);
