@@ -4,7 +4,7 @@ import { nameToLabel } from "./story_engine.js";
 const WINGMAN_SPEED = 5;
 const SHYGUY_SPEED = 1;
 
-const IS_DEBUG = true;
+const IS_DEBUG = false;
 
 class SpriteEntity {
   constructor(x0, y0, imageSrc, speed = 0, width = 24, height = 64, frameRate = 8, frameCount = 1) {
