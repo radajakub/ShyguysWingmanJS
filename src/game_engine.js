@@ -283,6 +283,9 @@ export class GameEngine {
     document.addEventListener("keyup", this.handleKeyUp);
 
     // Initialize with game view
+    const intialStatusText =
+      "You are playing as the Wingman. Maybe Shyguy will listen to you or let you follow him around. Don't let him leave without the girl!";
+    this.updateStatus(intialStatusText);
 
     this.sendButton.addEventListener("click", this.handleSendMessage);
     this.dialogueContinueButton.addEventListener("click", this.handleDialogueContinue);
