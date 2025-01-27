@@ -19,13 +19,15 @@ export function nameToLabel(name) {
 }
 
 class Bar {
-  constructor() {
+  constructor(shyguy) {
     this.name = "bartender";
-    this.situation_prompt = "This conversation happens at the bar.";
-    this.personality = "This is the bartender. He always offers triple vodka in his first answer. Then he is helpful, but he says that he has a crush on Jessica's sister";
+    this.situation_prompt = "This is a conversation with the bartender.";
+    this.personality = "This is the bartender. He always offers triple vodka in his first answer. Then he is helpful, but he says that he has a crush on Jessica's sister.";
     // this.past_conversation = "";
     this.imgpath = "assets/assets/barman.jpeg";
     this.output_format_prompt = "";
+    this.met_shyguy = false;
+    this.shyguy = shyguy;
     this.functionDescriptions = [
       {
         key: "analyzeConsumption",
@@ -34,11 +36,11 @@ class Bar {
         parameters: {
           num_beers: {
             type: "number",
-            description: "Total number of beers mentioned as being consumed in the conversation",
+            description: "Total number of beers ordered by Shyguy for himself in the conversation. ",
           },
           heavy_alcohol: {
             type: "boolean",
-            description: "If heavy alcohol was consumed, True",
+            description: "If Shyguy ordered or agreed to have heavy alcohol (like vodka), True",
           },
         },
       },
@@ -47,7 +49,7 @@ class Bar {
   }
 
   getSystemPrompt() {
-    return `${this.personality}.`;
+    return `${this.personality}. ${this.met_shyguy ? "He has met Shyguy already." : "He has not met Shyguy yet."}. The song playing is ${this.shyguy.song_playing}.`;
   }
 }
 
@@ -56,9 +58,10 @@ class DJ {
     this.name = "DJ";
     this.situation_prompt = "This is a conversation with the DJ.";
     this.personality =
-      "This is the DJ. He is funny. He offers drugs to the shyguy. He can only play songs from the options [Let it be, Call me maybe, Shape of you]. If asked to play a song, he will play it and not propose any other song.";
+      "This is the DJ. He is funny. He offers drugs to the shyguy. He can only play songs from the options [Let it be, Call me maybe, Shape of you]. If asked to play a song, he will play it and not propose any other song. He answers in two sentences maximum. He is funny.";
     // this.past_conversation = "";
     this.imgpath = "assets/assets/dj.jpeg";
+    this.met_shyguy = false;
     this.output_format_prompt = "";
     this.functionDescriptions = [
       {
@@ -77,7 +80,7 @@ class DJ {
   }
 
   getSystemPrompt() {
-    return `${this.personality}`;
+    return `${this.personality}. ${this.met_shyguy ? "He has met Shyguy already." : "He has not met Shyguy yet."}`;
   }
 }
 
@@ -91,6 +94,7 @@ class Sister {
       "This is the sister of Jessica. She is a deeply religious Christian. Her first answer is rude. Her second answer is about christianity. First answer is helpful. If asked about the favourite song of the girl, she says happily that it is 'Call me maybe'.";
     // this.past_conversation = "";
     this.imgpath = "assets/assets/sister.jpeg";
+    this.met_shyguy = false;
     this.functionDescriptions = [
       {
         key: "analyzeMood",
@@ -112,7 +116,7 @@ class Sister {
   }
 
   getSystemPrompt() {
-    return `${this.personality}. Her mood is ${this.mood} on the level 1 to 10. If the mood is low, she will be rude. If the mood is high, she will be helpful.`;
+    return `${this.personality}. Her mood is ${this.mood} on the level 1 to 10. If the mood is low, she will be rude. If the mood is high, she will be helpful. ${this.met_shyguy ? "She has met Shyguy already." : "She has not met Shyguy yet."}`;
   }
 }
 
@@ -124,6 +128,7 @@ class Girl {
     this.imgpath = "assets/assets/jessica.jpeg";
     this.output_format_prompt = "";
     this.shyguy = shyguy;
+    this.met_shyguy = false;
     this.functionDescriptions = [
       {
         key: "analyzeLiking",
@@ -141,9 +146,9 @@ class Girl {
 
   getSystemPrompt() {
     if (this.shyguy.song_playing === "Call me maybe") {
-      return `${this.personality}. She is very happy with the song playing. The first thing she says is that she really likes the music. Therefore she is nice and she likes shyguy. However, if he talks about algorithms, she does not like it and she becomes mean. Also if he talks with a lot of hesitation, she does not like it and she becomes mean.`;
+      return `${this.personality}. She is very happy with the song playing. The first thing she says is that she really likes the music. Therefore she is nice and she likes shyguy. However, if he talks about algorithms, she does not like it and she becomes mean. Also if he talks with a lot of hesitation, she does not like it and she becomes mean. ${this.met_shyguy ? "She has met Shyguy already." : "She has not met Shyguy yet."}`;
     } else {
-      return `${this.personality}. She does not like the song that shyguy is playing. The first thing she says is that the song is terrible. Then she is mean all the time.`;
+      return `${this.personality}. She does not like the song that the DJ plays. The first thing she says is that the song is terrible. Then she is mean all the time. ${this.met_shyguy ? "She has met Shyguy already." : "She has not met Shyguy yet."}`;
     }
   }
 }
@@ -186,7 +191,7 @@ export class StoryEngine {
     // Initialize story engine properties with provided shyguy instance
     this.shyguy = shyguy;
     this.sister = new Sister();
-    this.bar = new Bar();
+    this.bar = new Bar(shyguy);
     this.dj = new DJ();
     this.girl = new Girl(shyguy);
   }
@@ -224,6 +229,12 @@ export class StoryEngine {
 
     // Append the conversation to shyguy's history
     this.shyguy.conversation_history += `\nConversation with ${targetEntity.name}:\n${conversation}\n`;
+    console.log(conversation);
+    const conversationString = Object.values(conversation)
+      .map(msg => `${msg.role}: ${msg.content}`)
+      .join('\n');
+    this.shyguy.learnFromConversation(conversationString);
+    console.log("Lessons learned from conversation with " + targetEntity.name + this.shyguy.lessons_learned);
 
     let gameOver = this.decideGameOver(conversation_output.analysis.parameters.game_over);
     let gameSuccesful = this.decideGameSuccesful(conversation_output.analysis.parameters.likes_shyguy);
@@ -236,6 +247,16 @@ export class StoryEngine {
 
     this.updateStates(conversation_output.analysis, targetEntity.name);
     console.log("shyguy num_beers: " + this.shyguy.num_beers);
+
+    targetEntity.met_shyguy = true;
+
+    if (targetEntity.name === "DJ") {
+      this.shyguy.met_dj = true;
+    } else if (targetEntity.name === "bartender") {
+      this.shyguy.met_bar = true;
+    } else if (targetEntity.name === "Jessica's sister") {
+      this.shyguy.met_sister = true;
+    }
 
     return {
       conversation: conversation,

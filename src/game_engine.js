@@ -284,7 +284,7 @@ export class GameEngine {
 
     // Initialize with game view
     const intialStatusText =
-      "You are playing as the Wingman. Maybe Shyguy will listen to you or let you follow him around. Don't let him leave without the girl!";
+      "You are playing as the Wingman. You can move around using arrow keys. Maybe Shyguy will listen to you or let you follow him around. Don't let him leave without the girl!";
     this.updateStatus(intialStatusText);
 
     this.sendButton.addEventListener("click", this.handleSendMessage);
@@ -970,6 +970,11 @@ export class GameEngine {
       // TODO: save conversation history
       await this.shyguy.learnFromWingman(message);
       console.log("[ShyguyLLM]: Next action: ", action);
+      this.shyguy.last_actions.push(action);
+      if (this.shyguy.num_beers >= 1) {
+        console.log("Updating status to: Shyguy is drunk. Try pushing him.");
+        this.updateStatus("Shyguy is drunk. Try pushing him.");
+      }
       this.resolveAction(action);
     });
   }
@@ -1076,9 +1081,12 @@ export class GameEngine {
     }
 
     this.switchView("game");
-    this.shyguyLLM.getShyGuyResponse("").then((response) => {
+    this.shyguyLLM.getShyGuyResponse("Where do you go next? Your available actions are: " + this.shyguy.getAvailableActions()).then((response) => {
       const next_action = response.action;
-
+      if (this.shyguy.num_beers >= 1) {
+        console.log("Updating status to: Shyguy is drunk. Try pushing him.");
+        this.updateStatus("Shyguy is drunk. Try pushing him.");
+      }
       this.resolveAction(next_action);
     });
   }

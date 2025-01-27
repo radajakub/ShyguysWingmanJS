@@ -6,9 +6,10 @@ export class ShyGuyLLM {
     this.currentConversation = [];  // Array to store current conversation messages
     const availableActions = this.shyguy.getAvailableActions();
     this.baseSystemPrompt = `You are ShyGuy, a socially awkward character at a homecoming party. You are shy.
-        The wingman progressively makes you more confident, and if you drink alcohol.
+        The wingman progressively makes you more confident, and if you drink alcohol, you also get more confident.
         You know the wingman, he is your friend. You are talking to him.
         You are willing to have a little alcohol.
+        If there is no clear action, you go home. Do not stay idle twice in a row.
         The action should correspond to the dialogue.
         Your responses should be in JSON format with two fields:
         enum action {
@@ -37,7 +38,7 @@ export class ShyGuyLLM {
             addToPrompt += `You are drunk and you start talking about how bad you feel. You are annoying. You talk about algorithms and then how bad you feel.\n`;
         }
         if (this.shyguy.courage < 2) {
-            addToPrompt += `You are shy. However, you believe wingman.`;
+            addToPrompt += `You are shy. However, you believe wingman. You are willing to go the DJ, you are just shy.`;
         }
         if (this.shyguy.courage >= 2) {
             addToPrompt += `You talk normally.`;
@@ -76,12 +77,16 @@ export class ShyGuyLLM {
             const actionsPrompt = `\nYour currently available actions are: ${Object.keys(availableActions)
                 .map((action) => `\n- ${action}: ${availableActions[action].description}`)
                 .join("")}`;
-
             // Add the situation to current conversation
             this.addToCurrentConversation('wingman', player_message);
 
+            // Add the conversation to shyguy's history
+            this.shyguy.conversation_history += `\nWingman: ${player_message}\n`;
+
             const fullPrompt = this.getSystemPrompt() + actionsPrompt;
+            console.log("[ShyGuy]: Full prompt: ", fullPrompt);
             const response = await this.llm.getJsonCompletion(fullPrompt, player_message);
+            console.log("[ShyGuy]: Response: ", response);
 
             // Add ShyGuy's response to current conversation
             this.addToCurrentConversation('shyguy', response.dialogue);
